@@ -69,7 +69,6 @@ function showMemberAdded(){
   const existing=$("successOverlay"); if(existing) existing.remove();
   document.body.insertAdjacentHTML("beforeend",'<div id="successOverlay" class="success-overlay"><div class="success-card" role="dialog" aria-modal="true" aria-labelledby="memberAddedTitle"><div class="success-icon">✓</div><h3 id="memberAddedTitle">Member added successfully</h3><p>The class record is now ready. The member can sign in later and claim their profile using their mobile or WhatsApp number.</p><button class="btn" onclick="adminPage()">Back to Admin</button></div></div>');
 }
-}
 function adminRow(m){
 const role=(window.adminRoles||{})[m.id];
 return '<div class="admin-row"><div class="admin-row-main" onclick="adminEdit('+m.id+')">'+avatar(m)+'<div style="min-width:0"><h3>'+esc(m.preferred_name||m.full_name)+'</h3><p>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(", ")||"Location not entered")+'</p><p>'+esc([m.profession,m.company].filter(Boolean).join(" · ")||"No profession/company entered")+'</p></div></div><div class="admin-row-actions"><button class="btn secondary" onclick="adminEdit('+m.id+',event)">Edit</button><button class="btn secondary" onclick="setAdmin('+m.id+',event)">'+(role==="admin"?"Remove Admin":"Make Admin")+'</button><button class="btn danger" onclick="deleteMember('+m.id+',event)">Delete</button></div></div>';
