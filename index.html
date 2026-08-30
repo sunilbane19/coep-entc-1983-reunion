@@ -144,5 +144,5 @@ async function photosPage(){
   const driveUrl=GOOGLE_PHOTOS_URL;
   $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared photo archive</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div style="margin-top:12px"><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe></div></section>';
 }
-async function start(){const s=await sb.auth.getSession();user=s.data.session?.user||null;member=null;window.isAdmin=false;if(user)await load();await render();sb.auth.onAuthStateChange(async(_,sess)=>{user=sess?.user||null;member=null;editingMember=null;window.adminEditing=false;window.isAdmin=false;if(user)await load();await render()})}start();
+async function start(){const s=await sb.auth.getSession();user=s.data.session?.user||null;member=null;window.isAdmin=false;if(user)await load();await render();sb.auth.onAuthStateChange((_,sess)=>{user=sess?.user||null;member=null;editingMember=null;window.adminEditing=false;window.isAdmin=false;setTimeout(async()=>{if(user)await load();await render()},0)})}start();
 </script></body></html>
