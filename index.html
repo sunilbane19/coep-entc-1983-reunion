@@ -16,7 +16,7 @@
 .classmate-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:24px;color:#c98616;line-height:1}
 .directory-note{margin:14px 0 0}
 .directory-empty{grid-column:1/-1}
-.home-photo-panel img{object-position:center bottom;transform:scale(1.10);transform-origin:center bottom}
+.home-photo-panel img{object-position:center bottom;transform:scale(1.42);transform-origin:center bottom}
 @media(max-width:900px){.directory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.directory-card{padding:18px 14px}.directory-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.classmate-card{padding:9px 8px}.classmate-card .avatar{width:42px;height:42px;font-size:15px}.classmate-info h3{font-size:14px}.classmate-info p{font-size:11px}.directory-head h2{font-size:28px}}
 @media(max-width:430px){.directory-grid{grid-template-columns:1fr}.classmate-card{padding:10px}}
@@ -91,15 +91,7 @@ async function sendLink(){const e=$("email").value.trim().toLowerCase();if(!e)re
 async function claim(){const ph=indianPhone($("claimphone").value);if(!ph)return msg("Please enter your mobile / WhatsApp number.",true);const {data,error}=await sb.rpc("reunion_claim_by_phone",{p_phone:ph});if(error)return msg(error.message,true);await load();render()}
 async function logout(){await sb.auth.signOut();user=null;member=null;render()}
 async function directory(p){
-  $("app").innerHTML='<section class="card directory-card">
-    <div class="directory-head">
-      <div><h2>Classmates</h2><div class="stat"><b>'+p.completed_members+' of '+p.total_members+'</b> have completed their forms</div></div>
-      <button class="btn secondary" onclick="go(\'home\')">Back Home</button>
-    </div>
-    <div class="directory-search"><input id="q" placeholder="Search by name, city, profession or company..." oninput="filter()"></div>
-    <div id="list" class="directory-grid"></div>
-    <p class="small directory-note">Select a classmate to view the information they have chosen to share.</p>
-  </section>';
+  $("app").innerHTML='<section class="card directory-card"><div class="directory-head"><div><h2>Classmates</h2><div class="stat"><b>'+p.completed_members+' of '+p.total_members+'</b> have completed their forms</div></div><button class="btn secondary" onclick="go(\'home\')">Back Home</button></div><div class="directory-search"><input id="q" placeholder="Search by name, city, profession or company..." oninput="filter()"></div><div id="list" class="directory-grid"></div><p class="small directory-note">Select a classmate to view the information they have chosen to share.</p></section>';
   const r=await sb.from("reunion_directory").select("*").order("full_name");
   if(r.error)return $("list").innerHTML='<div class="notice error">'+esc(r.error.message)+'</div>';
   members=r.data||[];photoUrls={};
@@ -140,7 +132,7 @@ async function profile(p){const m=window.adminEditing?editingMember:member;if(!m
 
 function updateCard(u){return '<article class="update-card">'+(u.title?'<h3>'+esc(u.title)+'</h3>':"")+'<p>'+esc(u.body)+'</p><div class="update-date">'+new Date(u.created_at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"})+'</div></article>'}
 async function homePage(p){
-  $("app").innerHTML='<section class="home-hero"><div class="home-copy"><div class="home-kicker">COEP ENTC 1983</div><h2>Class Reunion</h2><p>Good to see you again. Reconnect with classmates, browse our photos and keep up with class news.</p><div class="actions"><button class="btn secondary" onclick="go(\'profile\')">My Profile</button></div></div><div class="home-photo-panel"><img src="https://raw.githubusercontent.com/sunilbane19/coep-entc-1983-reunion/main/coep-entc-1983-group.jpg" alt="COEP ENTC 1983 reunion group photograph" loading="eager"><div class="home-photo-label">COEP ENTC 1983</div></div></section><section class="home-cards"><article class="home-card" onclick="go(\'directory\')"><div class="home-card-icon">👥</div><h3>Classmates</h3><p>Search the class directory and view classmate profiles.</p><button class="btn" onclick="event.stopPropagation();go(\'directory\')">View Classmates →</button></article><article class="home-card" onclick="go(\'photos\')"><div class="home-card-icon">📷</div><h3>Photos</h3><p>Browse our shared archive of college and reunion photos.</p><button class="btn" onclick="event.stopPropagation();go(\'photos\')">View Photos →</button></article><article class="home-card" onclick="go(\'updates\')"><div class="home-card-icon">📣</div><h3>Class Updates</h3><p>Announcements, reunion information and admin messages.</p><button class="btn" onclick="event.stopPropagation();go(\'updates\')">View Updates →</button></article></section>';
+  $("app").innerHTML='<section class="home-hero"><div class="home-copy"><div class="home-kicker">COEP ENTC 1983</div><h2>Class Reunion</h2><p>Good to see you again. Reconnect with classmates, browse our photos and keep up with class news.</p><div class="actions"><button class="btn secondary" onclick="go(\'profile\')">My Profile</button></div></div><div class="home-photo-panel"><img src="coep-entc-1983-group.jpg?v=2" alt="COEP ENTC 1983 reunion group photograph" loading="eager"><div class="home-photo-label">COEP ENTC 1983</div></div></section><section class="home-cards"><article class="home-card" onclick="go(\'directory\')"><div class="home-card-icon">👥</div><h3>Classmates</h3><p>Search the class directory and view classmate profiles.</p><button class="btn" onclick="event.stopPropagation();go(\'directory\')">View Classmates →</button></article><article class="home-card" onclick="go(\'photos\')"><div class="home-card-icon">📷</div><h3>Photos</h3><p>Browse our shared archive of college and reunion photos.</p><button class="btn" onclick="event.stopPropagation();go(\'photos\')">View Photos →</button></article><article class="home-card" onclick="go(\'updates\')"><div class="home-card-icon">📣</div><h3>Class Updates</h3><p>Announcements, reunion information and admin messages.</p><button class="btn" onclick="event.stopPropagation();go(\'updates\')">View Updates →</button></article></section>';
 }
 async function updatesPage(){
   const r=await sb.from("reunion_class_updates").select("id,title,body,created_at").order("created_at",{ascending:false});
