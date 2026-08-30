@@ -61,6 +61,8 @@ async function createMember(){
   if(!full)return msg("Please enter the member's full name.",true);
   if(!mobile&&!whatsapp)return msg("Please enter a mobile or WhatsApp number.",true);
   if(!email)return msg("Please enter the member's email address.",true);
+  const duplicate=await sb.from("reunion_members").select("id,full_name").ilike("email",email).limit(1);
+  if(duplicate.data?.length)return msg("This email address is already assigned to "+(duplicate.data[0].full_name||"another classmate")+". Please use a different email address.",true);
   const patch={full_name:full,preferred_name:$("preferred_name")?.value||null,mobile:mobile||whatsapp,whatsapp_phone:whatsapp||mobile,email:email,class_batch:"COEP ENTC 1983",current_city:$("current_city")?.value||null,current_state:$("current_state")?.value||null,current_country:$("current_country")?.value||null,profession:$("profession")?.value||null,company:$("company")?.value||null,date_of_birth:$("date_of_birth")?.value||null,spouse_name:$("spouse_name")?.value||null,linkedin_url:$("linkedin_url")?.value||null,food_preference:$("food_preference")?.value||null,drink_preference:$("drink_preference")?.value||null,hobbies:$("hobbies")?.value||null,about:$("about")?.value||null,detailed_address:$("detailed_address")?.value||null};
   const r=await sb.from("reunion_members").insert(patch).select().single();
   if(r.error)return msg(r.error.message,true);
