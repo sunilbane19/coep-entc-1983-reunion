@@ -70,7 +70,11 @@ async function createMember(){
 }
 function showMemberAdded(){
   const existing=$("successOverlay"); if(existing) existing.remove();
-  document.body.insertAdjacentHTML("beforeend",'<div id="successOverlay" class="success-overlay"><div class="success-card" role="dialog" aria-modal="true" aria-labelledby="memberAddedTitle"><div class="success-icon">✓</div><h3 id="memberAddedTitle">Member added successfully</h3><p>The class record is now ready. The member can sign in later and claim their profile using their mobile or WhatsApp number.</p><button class="btn" onclick="adminPage()">Back to Admin</button></div></div>');
+  document.body.insertAdjacentHTML("beforeend",'<div id="successOverlay" class="success-overlay"><div class="success-card" role="dialog" aria-modal="true" aria-labelledby="memberAddedTitle"><div class="success-icon">✓</div><h3 id="memberAddedTitle">Member added successfully</h3><p>The class record is now ready. The member can sign in using the email address entered for this record.</p><button class="btn" onclick="closeMemberAdded()">Back to Admin</button></div></div>');
+}
+function closeMemberAdded(){
+  const overlay=$("successOverlay"); if(overlay) overlay.remove();
+  adminPage();
 }
 function adminRow(m){
 const role=(window.adminRoles||{})[m.id];
