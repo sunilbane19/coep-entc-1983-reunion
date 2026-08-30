@@ -134,7 +134,7 @@ async function profile(p){const m=window.adminEditing?editingMember:member;if(!m
 
 function updateCard(u){return '<article class="update-card">'+(u.title?'<h3>'+esc(u.title)+'</h3>':"")+'<p>'+esc(u.body)+'</p><div class="update-date">'+new Date(u.created_at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"})+'</div></article>'}
 async function homePage(p){
-  $("app").innerHTML='<section class="home-hero"><div class="home-copy"><div class="home-kicker">COEP ENTC 1983</div><h2>Class Reunion</h2><p>Good to see you again. Reconnect with classmates, browse our photos and keep up with class news.</p><div class="actions"><button class="btn secondary" onclick="go(\'profile\')">My Profile</button></div></div><div class="home-photo-panel"><img src="https://raw.githubusercontent.com/sunilbane19/coep-entc-1983-reunion/main/coep-entc-1983-group.jpg?v=6" alt="COEP ENTC 1983 reunion group photograph" loading="eager" onerror="this.style.display='none';this.parentElement.classList.add('photo-missing')"><div class="photo-missing-label">COEP ENTC 1983<br><span>Group photograph</span></div><div class="home-photo-label">COEP ENTC 1983</div></div></section><section class="home-cards"><article class="home-card" onclick="go(\'directory\')"><div class="home-card-icon">👥</div><h3>Classmates</h3><p>Search the class directory and view classmate profiles.</p><button class="btn" onclick="event.stopPropagation();go(\'directory\')">View Classmates →</button></article><article class="home-card" onclick="go(\'photos\')"><div class="home-card-icon">📷</div><h3>Photos</h3><p>Browse our shared archive of college and reunion photos.</p><button class="btn" onclick="event.stopPropagation();go(\'photos\')">View Photos →</button></article><article class="home-card" onclick="go(\'updates\')"><div class="home-card-icon">📣</div><h3>Class Updates</h3><p>Announcements, reunion information and admin messages.</p><button class="btn" onclick="event.stopPropagation();go(\'updates\')">View Updates →</button></article></section>';
+  $("app").innerHTML='<section class="home-hero"><div class="home-copy"><div class="home-kicker">COEP ENTC 1983</div><h2>Class Reunion</h2><p>Good to see you again. Reconnect with classmates, browse our photos and keep up with class news.</p><div class="actions"><button class="btn secondary" onclick="go(\'profile\')">My Profile</button></div></div><div class="home-photo-panel"><img src="./coep-entc-1983-group.jpg?v=7" alt="COEP ENTC 1983 reunion group photograph" loading="eager" onerror="this.style.display='none';this.parentElement.classList.add('photo-missing')"><div class="photo-missing-label">COEP ENTC 1983<br><span>Group photograph</span></div><div class="home-photo-label">COEP ENTC 1983</div></div></section><section class="home-cards"><article class="home-card" onclick="go(\'directory\')"><div class="home-card-icon">👥</div><h3>Classmates</h3><p>Search the class directory and view classmate profiles.</p><button class="btn" onclick="event.stopPropagation();go(\'directory\')">View Classmates →</button></article><article class="home-card" onclick="go(\'photos\')"><div class="home-card-icon">📷</div><h3>Photos</h3><p>Browse our shared archive of college and reunion photos.</p><button class="btn" onclick="event.stopPropagation();go(\'photos\')">View Photos →</button></article><article class="home-card" onclick="go(\'updates\')"><div class="home-card-icon">📣</div><h3>Class Updates</h3><p>Announcements, reunion information and admin messages.</p><button class="btn" onclick="event.stopPropagation();go(\'updates\')">View Updates →</button></article></section>';
 }
 async function updatesPage(){
   const r=await sb.from("reunion_class_updates").select("id,title,body,created_at").order("created_at",{ascending:false});
@@ -265,44 +265,60 @@ async function photosPage(){
   $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared photo archive</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div style="margin-top:12px"><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe></div></section>';
 }
 async function start(){
-  // Initialize the current session first. Do not run database work from inside
-  // the initial auth-state callback, which can race with getSession() and leave
-  // the page stuck on a blank shell after a magic-link redirect.
+  // Always paint the sign-in screen immediately. A slow/stuck Supabase
+  // getSession() must never leave the user staring at the loading shell.
   try{
-    const s=await sb.auth.getSession();
-    if(s.error)throw s.error;
-    user=s.data.session?.user||null;
+    user=null;
     member=null;
     editingMember=null;
     window.adminEditing=false;
     window.isAdmin=false;
-    if(user)await load();
     await render();
+
+    // Register the auth listener before checking the current session so a
+    // magic-link redirect can be picked up even if getSession is slow.
+    sb.auth.onAuthStateChange((event,sess)=>{
+      user=sess?.user||null;
+      member=null;
+      editingMember=null;
+      window.adminEditing=false;
+      window.isAdmin=false;
+      setTimeout(async()=>{
+        try{
+          if(user)await load();
+          await render();
+        }catch(e){
+          console.error("Reunion auth-state error:",e);
+          $("app").innerHTML='<section class="card"><h2>We could not open your reunion profile</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+        }
+      },0);
+    });
+
+    // Do not wait indefinitely for the auth client. If it takes more than
+    // four seconds, leave the sign-in screen visible and let the auth listener
+    // handle any session that arrives later.
+    const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),4000));
+    const s=await Promise.race([sb.auth.getSession(),timeout]);
+    if(s?.error)throw s.error;
+    if(s?.data?.session){
+      user=s.data.session.user;
+      member=null;
+      window.isAdmin=false;
+      await load();
+      await render();
+    }
   }catch(e){
     console.error("Reunion app startup error:",e);
-    $("app").innerHTML='<section class="card"><h2>We could not open the reunion site</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+    // Keep the sign-in experience usable even when session lookup fails.
+    if(!user){
+      await render();
+    }else{
+      $("app").innerHTML='<section class="card"><h2>We could not open your reunion profile</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+    }
   }
 
-  // Handle later sign-in / sign-out changes after the initial render.
-  sb.auth.onAuthStateChange((event,sess)=>{
-    user=sess?.user||null;
-    member=null;
-    editingMember=null;
-    window.adminEditing=false;
-    window.isAdmin=false;
-    setTimeout(async()=>{
-      try{
-        if(user)await load();
-        await render();
-      }catch(e){
-        console.error("Reunion auth-state error:",e);
-        $("app").innerHTML='<section class="card"><h2>We could not open your reunion profile</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
-      }
-    },0);
-  });
-
-  // Clean the one-time magic-link tokens from the address bar after the
-  // session has been established.
+  // Clean one-time magic-link tokens from the address bar after the session
+  // has been established. This does not affect normal query parameters.
   if(window.location.hash.includes("access_token=")||window.location.hash.includes("refresh_token=")){
     history.replaceState(null,"",window.location.pathname+window.location.search);
   }
