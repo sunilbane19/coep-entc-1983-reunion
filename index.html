@@ -103,39 +103,5 @@ async function photosPage(){
   const driveUrl=GOOGLE_PHOTOS_URL;
   $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared class photo archive</div></div><button class="btn secondary" onclick="go(\\'directory\\')">Classmates</button></div><div style="margin-top:18px"><div style="display:flex;justify-content:space-between;gap:15px;align-items:end;flex-wrap:wrap"><div><h3>Class Photo Archive</h3><p class="stat">Browse the photos already collected in our shared Google Drive.</p></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe><p class="small">The archive remains in Google Drive, so classmates can continue using the same shared photo collection and upload location.</p></div></section>';
 }
-function galleryCard(x){
-  const name=x.reunion_members?.preferred_name||x.reunion_members?.full_name||"Classmate";
-  const canDelete=Number(x.member_id)===Number(member.id)||!!window.isAdmin;
-  return '<article class="gallery-card"><img src="'+esc(x.url)+'" alt="'+esc(x.caption||"Reunion photo")+'">'+(canDelete?'<button class="gallery-delete" onclick="deleteGalleryPhoto('+x.id+',\''+esc(x.file_path).replace(/'/g,"&#39;")+'\')">Delete</button>':"")+'<div class="gallery-meta"><strong>'+esc(name)+'</strong><p>'+esc(x.caption||"")+(x.caption?" · ":"")+esc(new Date(x.created_at).toLocaleDateString())+'</p></div></article>';
-}
-async function uploadGalleryPhotos(){
-  const input=$("galleryFiles"), files=[...(input?.files||[])], caption=($("galleryCaption")?.value||"").trim()||null;
-  if(!files.length)return $("galleryMsg").innerHTML='<div class="notice error">Please choose at least one photo.</div>';
-  if(files.length>30)return $("galleryMsg").innerHTML='<div class="notice error">Please upload 30 photos or fewer at a time.</div>';
-  const bad=files.find(f=>f.size>50*1024*1024||!f.type.startsWith("image/"));
-  if(bad)return $("galleryMsg").innerHTML='<div class="notice error">Each file must be an image no larger than 50 MB.</div>';
-  $("galleryMsg").innerHTML='<div class="notice">Uploading '+files.length+' photo'+(files.length===1?"":"s")+'...</div>';
-  for(const file of files){
-    const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
-    const path=user.id+"/"+crypto.randomUUID()+"."+ext;
-    const up=await sb.storage.from("reunion-gallery").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
-    if(up.error){$("galleryMsg").innerHTML='<div class="notice error">'+esc(up.error.message)+'</div>';return}
-    const ins=await sb.from("reunion_gallery").insert({member_id:member.id,file_path:path,caption});
-    if(ins.error){
-      await sb.storage.from("reunion-gallery").remove([path]);
-      $("galleryMsg").innerHTML='<div class="notice error">'+esc(ins.error.message)+'</div>';return;
-    }
-  }
-  await photosPage();
-}
-async function deleteGalleryPhoto(id,path){
-  if(!confirm("Remove this photo from the reunion gallery?"))return;
-  const r=await sb.from("reunion_gallery").delete().eq("id",id);
-  if(r.error)return alert(r.error.message);
-  const s=await sb.storage.from("reunion-gallery").remove([path]);
-  if(s.error)return alert("The gallery entry was removed, but the stored image could not be deleted: "+s.error.message);
-  await photosPage();
-}
-
 async function start(){const s=await sb.auth.getSession();user=s.data.session?.user||null;member=null;window.isAdmin=false;if(user)await load();await render();sb.auth.onAuthStateChange(async(_,sess)=>{user=sess?.user||null;member=null;editingMember=null;window.adminEditing=false;window.isAdmin=false;if(user)await load();await render()})}start();
 </script></body></html>
