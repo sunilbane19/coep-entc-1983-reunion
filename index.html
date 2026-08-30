@@ -24,7 +24,7 @@
  .success-overlay{position:fixed;inset:0;background:#2b1b0d66;display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.success-card{width:min(440px,100%);background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 18px 55px #0004;text-align:center}.success-icon{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;background:#fff0b0;border:2px solid #f0d86d;display:grid;place-items:center;color:#a84b0a;font:bold 28px Georgia}.success-card h3{font-size:25px;margin:0 0 8px}.success-card p{margin:0;color:var(--muted);line-height:1.5}.success-card .btn{margin-top:20px}</style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"></div></main>
 <script>
 const sb=supabase.createClient("https://tizxolwmqrwvdheeqxrv.supabase.co","sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta");
-const LIVE_URL="https://sunilbane19.github.io/coep-entc-1983-reunion/";
+const LIVE_URL="https://coepentc83.com/";
 let user=null,member=null,members=[],photoUrls={},editingMember=null;const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));const init=n=>esc((n||"?").split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase());
 function msg(t,e=false){$("msg").innerHTML='<div class="notice '+(e?"error":"")+'">'+esc(t)+'</div>'}
 function nav(){if(!user){$("nav").innerHTML="";return}let admin=!!window.isAdmin;const who=member?.preferred_name||member?.full_name||user.email?.split("@")[0]||"Member";const photo=member&&photoUrls[member.id]?'<img class="nav-user-photo" src="'+esc(photoUrls[member.id])+'" alt="">':'<span class="nav-user-initials">'+esc(init(who))+"</span>";$("nav").innerHTML='<button class="'+(location.hash!=="#profile"&&location.hash!=="#admin"&&location.hash!=="#photos"?"active":"")+'" onclick="go(\'directory\')">Classmates</button><button class="'+(location.hash==="#photos"?"active":"")+'" onclick="go(\'photos\')">Photos</button><button class="'+(location.hash==="#profile"?"active":"")+'" onclick="go(\'profile\')">My Profile</button>'+(admin?'<button class="'+(location.hash==="#admin"?"active":"")+'" onclick="go(\'admin\')">Admin</button>':"")+'<span class="signedin" title="'+esc(user.email||"")+'">'+photo+'<b>'+esc(who)+'</b></span><button class="signout" onclick="logout()">Sign out</button>'}
@@ -32,7 +32,7 @@ function go(x){if(x==="profile"||x==="directory"){window.adminEditing=false;edit
 async function load(){const {data}=await sb.from("reunion_members").select("*").eq("auth_user_id",user.id).maybeSingle();member=data||null;if(member){if(member.photo_path){const u=await sb.storage.from("reunion-photos").createSignedUrl(member.photo_path,3600);if(u.data?.signedUrl)photoUrls[member.id]=u.data.signedUrl}const r=await sb.from("reunion_roles").select("role").eq("member_id",member.id).maybeSingle();window.isAdmin=r.data?.role==="admin"}}
 async function prog(){const {data}=await sb.from("reunion_progress").select("*").single();return data||{total_members:0,completed_members:0,completion_percent:0}}
 async function render(){if(!user){nav();$("app").innerHTML='<section class="card"><h2>Welcome</h2><p class="stat">Enter the email address registered for your class record and we’ll send you a one-time sign-in link.</p><label>Email address</label><input id="email" type="email" placeholder="you@example.com"><div class="actions"><button class="btn" onclick="sendLink()">Send sign-in link</button></div><div id="msg"></div><p class="small">On your first visit, you’ll be asked to match yourself to the class list.</p></section>';return}if(!member)await load();nav();if(!member){$("app").innerHTML='<section class="card"><h2>Find your class record</h2><p class="stat">Enter the mobile / WhatsApp number from the class list. No need to enter your name.</p><div class="grid"><div class="full"><label>Mobile / WhatsApp number</label><input id="claimphone" inputmode="tel" placeholder="+91 ..."></div></div><div class="actions"><button class="btn" onclick="claim()">Find my record</button><button class="btn secondary" onclick="logout()">Sign out</button></div><div id="msg"></div></section>';return}const p=await prog();if(location.hash==="#profile")return profile(p);if(location.hash==="#photos")return photosPage();if(location.hash==="#admin"&&window.isAdmin)return adminPage();return directory(p)}
-async function sendLink(){const e=$("email").value.trim().toLowerCase();if(!e)return msg("Please enter your email.",true);const check=await sb.rpc("reunion_email_is_registered",{p_email:e});if(check.error)return msg("We couldn't verify that email right now. Please try again.",true);if(!check.data)return msg("That email address is not in our class records. Please check it or contact the reunion administrator.",true);const {error}=await sb.auth.signInWithOtp({email:e,options:{emailRedirectTo:LIVE_URL}});msg(error?error.message:"Check your email for the sign-in link.")}
+async function sendLink(){const e=$("email").value.trim().toLowerCase();if(!e)return msg("Please enter your email.",true);const check=await sb.rpc("reunion_email_is_registered",{p_email:e});if(check.error)return msg("We couldn't verify that email right now. Please try again.",true);if(!check.data)return msg("That email address is not in our class records. Please check it or contact the reunion administrator.",true);const {error}=await sb.auth.signInWithOtp({email:e,options:{emailRedirectTo:LIVE_URL,shouldCreateUser:false}});msg(error?error.message:"Check your email for the sign-in link.")}
 async function claim(){const ph=$("claimphone").value.trim();if(!ph)return msg("Please enter your mobile / WhatsApp number.",true);const {data,error}=await sb.rpc("reunion_claim_by_phone",{p_phone:ph});if(error)return msg(error.message,true);await load();render()}
 async function logout(){await sb.auth.signOut();user=null;member=null;render()}
 async function directory(p){$("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end"><div><h2>Classmates</h2><div class="stat"><b>'+p.completed_members+' of '+p.total_members+'</b> have completed their forms</div></div><button class="btn" onclick="go(\'profile\')">My Profile</button></div><div class="notice">Click any classmate to view their full profile. All information is optional and is visible to all logged-in classmates.</div><div class="progress"><i style="width:'+p.completion_percent+'%"></i></div><label>Search classmates</label><input id="q" placeholder="Name, city, profession, company..." oninput="filter()"><div id="list"></div><p class="small">All profile information is optional. Any information a classmate has entered, including detailed home address, is visible to logged-in classmates.</p><div class="actions"><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';const r=await sb.from("reunion_directory").select("*").order("full_name");if(r.error)return $("list").innerHTML='<div class="notice error">'+esc(r.error.message)+'</div>';members=r.data||[];photoUrls={};await Promise.all(members.map(async m=>{if(!m.photo_path)return;const u=await sb.storage.from("reunion-photos").createSignedUrl(m.photo_path,3600);if(u.data?.signedUrl)photoUrls[m.id]=u.data.signedUrl}));filter()}
@@ -144,5 +144,36 @@ async function photosPage(){
   const driveUrl=GOOGLE_PHOTOS_URL;
   $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared photo archive</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div style="margin-top:12px"><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe></div></section>';
 }
-async function start(){const s=await sb.auth.getSession();user=s.data.session?.user||null;member=null;window.isAdmin=false;if(user)await load();await render();sb.auth.onAuthStateChange((_,sess)=>{user=sess?.user||null;member=null;editingMember=null;window.adminEditing=false;window.isAdmin=false;setTimeout(async()=>{if(user)await load();await render()},0)})}start();
+async function start(){
+  sb.auth.onAuthStateChange((event,sess)=>{
+    user=sess?.user||null;
+    member=null;
+    editingMember=null;
+    window.adminEditing=false;
+    window.isAdmin=false;
+    setTimeout(async()=>{
+      try{
+        if(user)await load();
+        await render();
+      }catch(e){
+        $("app").innerHTML='<section class="card"><h2>We could not open your reunion profile</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+      }
+    },0);
+  });
+  try{
+    const s=await sb.auth.getSession();
+    if(s.error)throw s.error;
+    user=s.data.session?.user||null;
+    member=null;
+    window.isAdmin=false;
+    if(user)await load();
+    await render();
+    if(window.location.hash.includes("access_token=")||window.location.hash.includes("refresh_token=")){
+      history.replaceState(null,"",window.location.pathname+window.location.search);
+    }
+  }catch(e){
+    $("app").innerHTML='<section class="card"><h2>Sign-in could not be completed</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+  }
+}
+start();
 </script></body></html>
