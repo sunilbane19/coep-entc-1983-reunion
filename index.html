@@ -30,7 +30,7 @@
 .home-copy .actions{margin-top:14px}
 .home-copy .btn{padding:10px 17px}
 .home-photo-panel{border-radius:20px;height:265px;overflow:hidden;border:1px solid var(--line);background:#e9dec9;position:relative;box-shadow:0 6px 22px #5c3b1720}
-.home-photo-panel img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 72%}.home-photo-panel.photo-missing{background:linear-gradient(135deg,#a8b68b,#d6b26e 55%,#8a642d)}.home-photo-panel.photo-missing:before{content:"Group photograph";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:24px Georgia,serif;text-shadow:0 2px 8px #0008;z-index:1}
+.home-photo-panel img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 90%}.home-photo-panel.photo-missing{background:linear-gradient(135deg,#a8b68b,#d6b26e 55%,#8a642d)}.home-photo-panel.photo-missing:before{content:"Group photograph";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:24px Georgia,serif;text-shadow:0 2px 8px #0008;z-index:1}
 .home-photo-panel:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 48%,#2b1b0d70)}
 .home-photo-label{position:absolute;z-index:2;left:22px;bottom:18px;color:#fff;font-family:Georgia,serif;font-size:25px;text-shadow:0 2px 8px #0008}
 .home-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
@@ -57,7 +57,7 @@
 .required{color:#b44}
 @media(max-width:800px){.home-hero{grid-template-columns:1fr}.home-copy h2{font-size:40px}.home-cards{grid-template-columns:1fr}.home-card p{min-height:0}}
 </style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"><section class="card"><h2>Welcome</h2><p class="stat">Loading the reunion site…</p></section></div></main><footer class="site-footer">COEP ENTC 1983</footer>
-<script src="assets/group-photo-data.js"></script><script>
+<script src="assets/group-photo-data.js?v=2"></script><script>
 const sb=supabase.createClient("https://tizxolwmqrwvdheeqxrv.supabase.co","sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta");
 const LIVE_URL="https://coepentc83.com/";
 let user=null,member=null,members=[],photoUrls={},editingMember=null;const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));const init=n=>esc((n||"?").split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase());
