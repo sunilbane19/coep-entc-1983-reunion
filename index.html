@@ -145,6 +145,25 @@ async function photosPage(){
   $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared photo archive</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div style="margin-top:12px"><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe></div></section>';
 }
 async function start(){
+  // Initialize the current session first. Do not run database work from inside
+  // the initial auth-state callback, which can race with getSession() and leave
+  // the page stuck on a blank shell after a magic-link redirect.
+  try{
+    const s=await sb.auth.getSession();
+    if(s.error)throw s.error;
+    user=s.data.session?.user||null;
+    member=null;
+    editingMember=null;
+    window.adminEditing=false;
+    window.isAdmin=false;
+    if(user)await load();
+    await render();
+  }catch(e){
+    console.error("Reunion app startup error:",e);
+    $("app").innerHTML='<section class="card"><h2>We could not open the reunion site</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+  }
+
+  // Handle later sign-in / sign-out changes after the initial render.
   sb.auth.onAuthStateChange((event,sess)=>{
     user=sess?.user||null;
     member=null;
@@ -156,23 +175,16 @@ async function start(){
         if(user)await load();
         await render();
       }catch(e){
+        console.error("Reunion auth-state error:",e);
         $("app").innerHTML='<section class="card"><h2>We could not open your reunion profile</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
       }
     },0);
   });
-  try{
-    const s=await sb.auth.getSession();
-    if(s.error)throw s.error;
-    user=s.data.session?.user||null;
-    member=null;
-    window.isAdmin=false;
-    if(user)await load();
-    await render();
-    if(window.location.hash.includes("access_token=")||window.location.hash.includes("refresh_token=")){
-      history.replaceState(null,"",window.location.pathname+window.location.search);
-    }
-  }catch(e){
-    $("app").innerHTML='<section class="card"><h2>Sign-in could not be completed</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';
+
+  // Clean the one-time magic-link tokens from the address bar after the
+  // session has been established.
+  if(window.location.hash.includes("access_token=")||window.location.hash.includes("refresh_token=")){
+    history.replaceState(null,"",window.location.pathname+window.location.search);
   }
 }
 start();
