@@ -10,7 +10,7 @@
 .gallery-upload{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}.drive-frame{width:100%;height:680px;border:1px solid var(--line);border-radius:18px;background:#fff;margin-top:16px}.drive-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
 @media(max-width:900px){.photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-upload{grid-template-columns:1fr}.drive-frame{height:560px;margin-top:12px}.drive-actions{gap:8px}.drive-actions .btn{width:100%;text-align:center}}
-.admin-toolbar{display:flex;gap:12px;align-items:flex-end;margin-top:16px}
+.admin-toolbar{display:flex;gap:12px;align-items:flex-end;margin-top:16px}.admin-filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.admin-filter{border:1px solid var(--line);background:#fffaf1;color:var(--ink);border-radius:11px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:12px}.admin-filter.active{background:var(--gold);color:#fff;border-color:var(--gold)}.admin-status{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:11px;font-weight:700}.admin-status.complete{color:#5d7b3d}.admin-status.pending{color:#a87519}.admin-status.admin{color:#8b5c11}.admin-status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
 .admin-toolbar>div{flex:1}
 .admin-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .admin-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fffaf1;min-width:0}
@@ -20,7 +20,7 @@
 .admin-row p{margin:2px 0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin-row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .admin-row-actions .btn{padding:8px 10px;font-size:12px}
-@media(max-width:700px){.admin-list{grid-template-columns:1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.admin-row{padding:7px 8px;gap:7px}.admin-row-actions{flex-direction:row;flex-wrap:nowrap;gap:4px;flex:none}.admin-row-actions .btn{width:auto;padding:6px 7px;font-size:11px;white-space:nowrap}.admin-row .avatar{width:38px;height:38px;font-size:16px}.admin-row h3{font-size:16px}}@media(max-width:700px){header{padding:10px 16px}.signedin{font-size:11px;padding:0 2px}.container{padding:8px 14px 40px}.hero{padding:4px 2px 6px}.hero p{font-size:16px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.hero h2{font-size:43px}.top{align-items:stretch;flex-direction:column}.nav{margin-top:8px;width:100%;justify-content:stretch}.nav button{flex:1;text-align:center}.detail-overlay{padding:8px;align-items:flex-end}.detail-card{max-height:94vh;border-radius:22px 22px 0 0;padding:16px}.detail-photo{width:72px;height:72px;border-radius:15px}.detail-title h2{font-size:25px}.detail-grid{grid-template-columns:1fr 1fr;gap:0 16px}.detail-item{padding:8px 0}.detail-section{margin-top:11px}.detail-section h3{font-size:13px;margin-bottom:5px}.detail-card>.actions{margin-top:12px}.detail-card>.actions .btn{padding:10px 16px}}
+@media(max-width:700px){.admin-list{grid-template-columns:1fr}.admin-toolbar{align-items:stretch;flex-direction:column}.admin-filters{gap:5px}.admin-filter{padding:7px 9px;font-size:11px}.admin-row{padding:7px 8px;gap:7px}.admin-row-actions{flex-direction:row;flex-wrap:nowrap;gap:4px;flex:none}.admin-row-actions .btn{width:auto;padding:6px 7px;font-size:11px;white-space:nowrap}.admin-row .avatar{width:38px;height:38px;font-size:16px}.admin-row h3{font-size:16px}}@media(max-width:700px){header{padding:10px 16px}.signedin{font-size:11px;padding:0 2px}.container{padding:8px 14px 40px}.hero{padding:4px 2px 6px}.hero p{font-size:16px}.grid{grid-template-columns:1fr}.full{grid-column:auto}.hero h2{font-size:43px}.top{align-items:stretch;flex-direction:column}.nav{margin-top:8px;width:100%;justify-content:stretch}.nav button{flex:1;text-align:center}.detail-overlay{padding:8px;align-items:flex-end}.detail-card{max-height:94vh;border-radius:22px 22px 0 0;padding:16px}.detail-photo{width:72px;height:72px;border-radius:15px}.detail-title h2{font-size:25px}.detail-grid{grid-template-columns:1fr 1fr;gap:0 16px}.detail-item{padding:8px 0}.detail-section{margin-top:11px}.detail-section h3{font-size:13px;margin-bottom:5px}.detail-card>.actions{margin-top:12px}.detail-card>.actions .btn{padding:10px 16px}}
  .success-overlay{position:fixed;inset:0;background:#2b1b0d66;display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.success-card{width:min(440px,100%);background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 18px 55px #0004;text-align:center}.success-icon{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;background:#fff0b0;border:2px solid #f0d86d;display:grid;place-items:center;color:#a84b0a;font:bold 28px Georgia}.success-card h3{font-size:25px;margin:0 0 8px}.success-card p{margin:0;color:var(--muted);line-height:1.5}.success-card .btn{margin-top:20px}</style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"></div></main>
 <script>
 const sb=supabase.createClient("https://tizxolwmqrwvdheeqxrv.supabase.co","sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta");
@@ -49,8 +49,12 @@ if(r.error)return $("app").innerHTML='<section class="card"><h2>Admin</h2><div c
 const rows=r.data||[];
 const rr=await sb.from("reunion_roles").select("member_id,role");
 window.adminRoles={};(rr.data||[]).forEach(x=>window.adminRoles[x.member_id]=x.role);
-$("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Admin</h2><p class="stat">Manage classmates.</p></div><button class="btn" onclick="adminAdd()">+ Add New Member</button></div><div class="admin-toolbar"><div><label>Search</label><input id="adminQ" placeholder="Name, phone, email..." oninput="filterAdmin()"></div><div class="small" style="padding-bottom:12px">'+rows.length+' class records</div></div><div id="adminList" class="admin-list"></div></section>';
+const completed=rows.filter(m=>m.profile_completed).length;
+const pending=rows.length-completed;
+const admins=rows.filter(m=>(window.adminRoles||{})[m.id]==="admin").length;
+$("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Admin</h2><p class="stat">Manage classmates and see who has completed their profile.</p></div><button class="btn" onclick="adminAdd()">+ Add New Member</button></div><div class="admin-toolbar"><div><label>Search</label><input id="adminQ" placeholder="Name, phone, email..." oninput="filterAdmin()"></div><div class="small" style="padding-bottom:12px">'+rows.length+' class records</div></div><div class="admin-filters"><button id="filterAll" class="admin-filter active" onclick="setAdminFilter('all')">All '+rows.length+'</button><button id="filterComplete" class="admin-filter" onclick="setAdminFilter('complete')">✓ Complete '+completed+'</button><button id="filterPending" class="admin-filter" onclick="setAdminFilter('pending')">○ Not completed '+pending+'</button><button id="filterAdmins" class="admin-filter" onclick="setAdminFilter('admins')">Admin '+admins+'</button></div><div id="adminList" class="admin-list"></div></section>';
 window.adminMembers=rows;
+window.adminFilter="all";
 filterAdmin();
 }
 function adminAdd(){
@@ -78,11 +82,25 @@ function closeMemberAdded(){
 }
 function adminRow(m){
 const role=(window.adminRoles||{})[m.id];
-return '<div class="admin-row"><div class="admin-row-main" onclick="adminEdit('+m.id+')">'+avatar(m)+'<div style="min-width:0"><h3>'+esc(m.preferred_name||m.full_name)+'</h3><p>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(", ")||"Location not entered")+'</p><p>'+esc([m.profession,m.company].filter(Boolean).join(" · ")||"No profession/company entered")+'</p></div></div><div class="admin-row-actions"><button class="btn secondary" onclick="adminEdit('+m.id+',event)">Edit</button><button class="btn secondary" onclick="setAdmin('+m.id+',event)">'+(role==="admin"?"Remove Admin":"Make Admin")+'</button><button class="btn danger" onclick="deleteMember('+m.id+',event)">Delete</button></div></div>';
+const complete=!!m.profile_completed;
+const status=role==="admin"?"admin":(complete?"complete":"pending");
+const statusText=role==="admin"?"Admin":(complete?"Profile complete":"Profile not completed");
+return '<div class="admin-row"><div class="admin-row-main" onclick="adminEdit('+m.id+')">'+avatar(m)+'<div style="min-width:0"><h3>'+esc(m.preferred_name||m.full_name)+'</h3><div class="admin-status '+status+'"><span class="admin-status-dot"></span>'+statusText+'</div><p>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(", ")||"Location not entered")+'</p><p>'+esc([m.profession,m.company].filter(Boolean).join(" · ")||"No profession/company entered")+'</p></div></div><div class="admin-row-actions"><button class="btn secondary" onclick="adminEdit('+m.id+',event)">Edit</button><button class="btn secondary" onclick="setAdmin('+m.id+',event)">'+(role==="admin"?"Remove Admin":"Make Admin")+'</button><button class="btn danger" onclick="deleteMember('+m.id+',event)">Delete</button></div></div>';
+}
+function setAdminFilter(filter){
+window.adminFilter=filter;
+["filterAll","filterComplete","filterPending","filterAdmins"].forEach(id=>$(id)?.classList.remove("active"));
+const map={all:"filterAll",complete:"filterComplete",pending:"filterPending",admins:"filterAdmins"};
+$(map[filter])?.classList.add("active");
+filterAdmin();
 }
 function filterAdmin(){
 const q=($("adminQ")?.value||"").toLowerCase();
-const rows=(window.adminMembers||[]).filter(m=>[m.full_name,m.preferred_name,m.mobile,m.whatsapp_phone,m.email,m.current_city,m.current_state,m.current_country,m.profession,m.company].some(v=>String(v||"").toLowerCase().includes(q)));
+let rows=(window.adminMembers||[]).filter(m=>[m.full_name,m.preferred_name,m.mobile,m.whatsapp_phone,m.email,m.current_city,m.current_state,m.current_country,m.profession,m.company].some(v=>String(v||"").toLowerCase().includes(q)));
+const f=window.adminFilter||"all";
+if(f==="complete")rows=rows.filter(m=>m.profile_completed);
+if(f==="pending")rows=rows.filter(m=>!m.profile_completed);
+if(f==="admins")rows=rows.filter(m=>(window.adminRoles||{})[m.id]==="admin");
 $("adminList").innerHTML=rows.map(adminRow).join("")||'<p class="stat">No classmates found.</p>';
 }
 async function setAdmin(id,e){
