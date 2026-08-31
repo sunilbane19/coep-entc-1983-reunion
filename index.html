@@ -9,11 +9,8 @@
 .photos-message .actions{margin-top:18px}
 .photos-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:16px;padding:14px 20px;text-decoration:none}
 .photos-note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.4}
-.photos-visual{border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#f6e5bd,#fffdf8);min-height:260px;display:grid;place-items:center;overflow:hidden;position:relative}
-.photos-visual:before,.photos-visual:after{content:"";position:absolute;border:2px solid #dfcfb3;border-radius:16px;background:#fffdf8;box-shadow:0 5px 15px #5c3b1710}
-.photos-visual:before{width:58%;height:58%;transform:rotate(-8deg) translate(-18px,4px)}
-.photos-visual:after{width:58%;height:58%;transform:rotate(7deg) translate(18px,-4px)}
-.photos-visual span{position:relative;z-index:2;font:700 64px Georgia,serif;color:#c98616}
+.photos-visual{border:1px solid var(--line);border-radius:20px;background:#fffdf8;min-height:260px;display:block;overflow:hidden;position:relative}.photos-visual img{width:100%;height:100%;min-height:260px;display:block;object-fit:cover;object-position:center}
+
 @media(max-width:700px){
   .photos-landing{grid-template-columns:1fr;gap:12px}
   .photos-message{padding:20px}
@@ -305,7 +302,7 @@ async function save(){const target=window.adminEditing?editingMember:member;if(!
 const GOOGLE_PHOTOS_URL="https://photos.app.goo.gl/RN9Ttn1H7SMMt8CL6";
 async function photosPage(){
   const photosUrl=GOOGLE_PHOTOS_URL;
-  $("app").innerHTML='<section class="card"><div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common Google Photos album.</div></div><div class="photos-landing"><div class="photos-message"><div class="photo-icon" aria-hidden="true">📷</div><h3>Our Reunion Photo Album</h3><p>View the latest reunion photographs and add your own photos to our shared album. The album is managed in Google Photos so everyone can keep contributing to the collection.</p><div class="actions"><a class="btn photos-open-btn" href="'+esc(photosUrl)+'" target="_blank" rel="noopener noreferrer">Open Reunion Photo Album <span aria-hidden="true">→</span></a></div><div class="photos-note">You will leave the reunion site and open the shared album in Google Photos.</div></div><div class="photos-visual" aria-hidden="true"><span>📷</span></div></div></section>';
+  $("app").innerHTML='<section class="card"><div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common Google Photos album.</div></div><div class="photos-landing"><div class="photos-message"><div class="photo-icon" aria-hidden="true">📷</div><h3>Our Reunion Photo Album</h3><p>View the latest reunion photographs and add your own photos to our shared album. The album is managed in Google Photos so everyone can keep contributing to the collection.</p><div class="actions"><a class="btn photos-open-btn" href="'+esc(photosUrl)+'" target="_blank" rel="noopener noreferrer">Open Reunion Photo Album <span aria-hidden="true">→</span></a></div><div class="photos-note">You will leave the reunion site and open the shared album in Google Photos.</div></div><div class="photos-visual"><img src="/reunion-photo-placeholder.jpg" alt="A scenic road through the green hills"></div></div></section>';
 }
 async function start(){
   // Initialize the current session first. Do not run database work from inside
