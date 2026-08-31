@@ -262,7 +262,12 @@ async function save(){const target=window.adminEditing?editingMember:member;if(!
 const GOOGLE_PHOTOS_URL="https://drive.google.com/drive/folders/1klalf7uPTBlRuANP6L_lOE4uUemLReEa?usp=drive_link";
 async function photosPage(){
   const driveUrl=GOOGLE_PHOTOS_URL;
-  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">Our shared photo archive</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div class="drive-frame-wrap"><iframe class="drive-frame" src="https://drive.google.com/embeddedfolderview?id=1klalf7uPTBlRuANP6L_lOE4uUemLReEa#grid" title="COEP ENTC 1983 class photo archive" loading="lazy"></iframe></div></section>';
+  const gallery=[
+    {src:"coep-entc-1983-group.avif",alt:"COEP ENTC 1983 group photograph"},
+    {src:"coep-entc-1983-group.jpg",alt:"COEP ENTC 1983 group photograph"}
+  ];
+  const cards=gallery.map(p=>'<a class="gallery-card" href="'+esc(p.src)+'" target="_blank" rel="noopener" aria-label="Open '+esc(p.alt)+'"><img src="'+esc(p.src)+'" alt="'+esc(p.alt)+'" loading="lazy"><div class="gallery-meta"><strong>COEP ENTC 1983</strong><p>Class reunion photograph</p></div></a>').join("");
+  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end;flex-wrap:wrap"><div><h2>Photos</h2><div class="stat">A cleaner view of our reunion photographs</div></div><a class="btn" href="'+esc(driveUrl)+'" target="_blank" rel="noopener">Open Photo Archive</a></div><div class="photo-gallery">'+cards+'</div><p class="small" style="margin:14px 2px 0">More photographs remain available in the full Google Drive archive.</p></section>';
 }
 async function start(){
   // Initialize the current session first. Do not run database work from inside
