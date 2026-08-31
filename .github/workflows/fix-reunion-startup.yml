@@ -13,85 +13,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Repair startup loader
+      - name: Repair startup loader and diagnose syntax
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-
-          p = Path("index.html")
-          s = p.read_text(encoding="utf-8")
-
-          old = re.search(r'const sb=window\.supabase\?\.createClient\("https://tizxolwmqrwvdheeqxrv\.supabase\.co","sb_publishable_[^"]+"\);if\(!sb\)\{.*?throw new Error\("Supabase client library failed to load"\);\}', s, re.S)
-          if not old:
-              print("Startup block already repaired or not found; nothing to do.")
-          else:
-              new = '''const $=id=>document.getElementById(id);
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          old=re.search(r'const sb=window\.supabase\?\.createClient\("https://tizxolwmqrwvdheeqxrv\.supabase\.co","sb_publishable_[^"]+"\);if\(!sb\)\{.*?throw new Error\("Supabase client library failed to load"\);\}',s,re.S)
+          if old:
+            new='''const $=id=>document.getElementById(id);
           let sb=null;
           const SUPABASE_URL="https://tizxolwmqrwvdheeqxrv.supabase.co";
           const SUPABASE_KEY="sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta";
           async function ensureSupabase(){
-            if(window.supabase?.createClient){
-              sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-              return sb;
-            }
-            const urls=[
-              "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
-              "https://unpkg.com/@supabase/supabase-js@2"
-            ];
-            for(const src of urls){
-              try{
-                await new Promise((resolve,reject)=>{
-                  const existing=document.querySelector('script[data-supabase-loader]');
-                  if(existing){
-                    existing.addEventListener("load",resolve,{once:true});
-                    existing.addEventListener("error",()=>reject(new Error("load failed")),{once:true});
-                    return;
-                  }
-                  const el=document.createElement("script");
-                  el.src=src;
-                  el.async=true;
-                  el.dataset.supabaseLoader="1";
-                  el.onload=resolve;
-                  el.onerror=()=>reject(new Error("load failed"));
-                  document.head.appendChild(el);
-                });
-                if(window.supabase?.createClient) break;
-              }catch(_){}
-            }
-            if(!window.supabase?.createClient){
-              throw new Error("The secure sign-in service could not be loaded. Please refresh the page.");
-            }
-            sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-            return sb;
+            if(window.supabase?.createClient){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return sb;}
+            const urls=["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2","https://unpkg.com/@supabase/supabase-js@2"];
+            for(const src of urls){try{await new Promise((resolve,reject)=>{const el=document.createElement("script");el.src=src;el.async=true;el.onload=resolve;el.onerror=reject;document.head.appendChild(el)});if(window.supabase?.createClient)break}catch(_){}}
+            if(!window.supabase?.createClient)throw new Error("The secure sign-in service could not be loaded. Please refresh the page.");
+            sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return sb;
           }'''
-              s = s[:old.start()] + new + s[old.end():]
-
-              # Remove the old duplicate $ declaration while keeping esc/init and the rest of that declaration.
-              s = s.replace('const $=id=>document.getElementById(id);const esc=', 'const esc=', 1)
-
-              # Make startup wait for the Supabase client before any render/auth work.
-              s = s.replace('async function start(){\n  try{\n    user=null;', 'async function start(){\n  try{\n    await ensureSupabase();\n    user=null;', 1)
-
-              p.write_text(s, encoding="utf-8")
-              print("Startup loader repaired.")
-
-          # Basic JavaScript syntax check on the inline script.
-          text = p.read_text(encoding="utf-8")
-          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
-          inline = scripts[-1]
-          Path("/tmp/reunion-inline.js").write_text(inline, encoding="utf-8")
+            s=s[:old.start()]+new+s[old.end():]
+            s=s.replace('const $=id=>document.getElementById(id);const esc=','const esc=',1)
+            s=s.replace('async function start(){\n  try{\n    user=null;','async function start(){\n  try{\n    await ensureSupabase();\n    user=null;',1)
+            p.write_text(s,encoding="utf-8")
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          Path("/tmp/reunion-inline.js").write_text(scripts[-1],encoding="utf-8")
           PY
-          node --check /tmp/reunion-inline.js
-
-      - name: Commit repair
-        run: |
-          if git diff --quiet; then
-            echo "No changes to commit."
-            exit 0
+          npm install --no-save acorn@8
+          node - <<'JS'
+          const fs=require('fs'),acorn=require('acorn');
+          const s=fs.readFileSync('/tmp/reunion-inline.js','utf8');
+          try{acorn.parse(s,{ecmaVersion:'latest',sourceType:'script'});console.log('JavaScript syntax OK');}
+          catch(e){
+            console.error('SYNTAX:',e.message,'at position',e.pos,'line',e.loc?.line,'column',e.loc?.column);
+            const lines=s.split('\n'); const line=lines[(e.loc?.line||1)-1]||'';
+            console.error(line.slice(Math.max(0,(e.loc?.column||0)-180),(e.loc?.column||0)+180));
+            process.exit(1);
+          }
+          JS
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html
+            git commit -m "Repair Supabase startup loader"
+            git push
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Fix reunion site startup loading"
-          git push
+
+      - name: Commit no-op
+        if: failure()
+        run: echo "See syntax diagnostic above."
