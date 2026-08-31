@@ -146,7 +146,7 @@ async function adminUpdates(){
   const r=await sb.from("reunion_class_updates").select("id,title,body,created_at").order("created_at",{ascending:false});
   if(r.error)return $("app").innerHTML='<section class="card"><h2>Class Updates</h2><div class="notice error">'+esc(r.error.message)+'</div></section>';
   const rows=r.data||[];
-  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Class Updates</h2><p class="stat">Add a message here and it will appear on the members’ Home page.</p></div></div><div class="grid" style="margin-top:18px"><div><label>Title (optional)</label><input id="updateTitle" placeholder="e.g. Reunion arrangements"></div><div class="full"><label>Message</label><textarea id="updateBody" style="min-height:150px" placeholder="Type the message to show to classmates..."></textarea></div></div><div class="actions"><button class="btn" onclick="createUpdate()">Post Update</button></div><div id="msg"></div><h3 style="margin-top:28px;font-size:20px">Posted updates</h3><div class="update-admin-list">'+(rows.map(u=>'<div class="update-admin-row"><div>'+(u.title?'<h3>'+esc(u.title)+'</h3>':"")+'<p>'+esc(u.body)+'</p><div class="update-date">'+new Date(u.created_at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"})+'</div></div><button class="btn danger" onclick="deleteUpdate('+u.id+')">Delete</button></div>').join("")||'<p class="stat">No updates posted yet.</p>')+'</div></section>';
+  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>Class Updates</h2><p class="stat">Add a message here and it will appear on the members’ Home page.</p></div></div><div class="grid" style="margin-top:18px"><div><label>Title (optional)</label><input id="updateTitle" placeholder="e.g. Reunion arrangements"></div><div class="full"><label>Message</label><textarea id="updateBody" style="min-height:150px" placeholder="Type the message to show to classmates..."></textarea></div></div><div class="actions"><button class="btn" onclick="createUpdate()">Post Update</button></div><div id="msg"></div><h3 style="margin-top:28px;font-size:20px">Posted updates</h3><div class="update-admin-list">'+(rows.map(u=>'<div class="update-admin-row"><div>'+(u.title?'<h3>'+esc(u.title)+'</h3>':"")+'<p>'+esc(u.body)+'</p><div class="update-date">'+new Date(u.created_at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"})+'</div></div><div class="actions" style="margin-top:0;justify-content:flex-end"><button class="btn secondary" onclick="editUpdate('+u.id+',event)">Edit</button><button class="btn danger" onclick="deleteUpdate('+u.id+',event)">Delete</button></div></div>').join("")||'<p class="stat">No updates posted yet.</p>')+'</div></section>';
 }
 async function createUpdate(){
   const title=$("updateTitle")?.value.trim()||null, body=$("updateBody")?.value.trim();
@@ -155,10 +155,31 @@ async function createUpdate(){
   if(r.error)return msg(r.error.message,true);
   await adminUpdates();
 }
-async function deleteUpdate(id){
+async function deleteUpdate(id,e){
+  e?.stopPropagation();
   if(!confirm("Delete this class update?"))return;
   const r=await sb.from("reunion_class_updates").delete().eq("id",id);
   if(r.error)return alert(r.error.message);
+  await adminUpdates();
+}
+
+async function editUpdate(id,e){
+  e?.stopPropagation();
+  const r=await sb.from("reunion_class_updates").select("id,title,body,created_at").eq("id",id).single();
+  if(r.error||!r.data)return alert(r.error?.message||"Could not load this update.");
+  const u=r.data;
+  const existing=$("updateEditOverlay"); if(existing)existing.remove();
+  document.body.insertAdjacentHTML("beforeend",'<div id="updateEditOverlay" class="detail-overlay"><div class="detail-card" role="dialog" aria-modal="true" aria-labelledby="updateEditTitle"><div class="detail-top"><div><h2 id="updateEditTitle">Edit Class Update</h2><p class="stat">Change the title or message, then save.</p></div><button class="detail-close" onclick="closeUpdateEdit()" aria-label="Close">×</button></div><div class="grid"><div class="full"><label>Title (optional)</label><input id="editUpdateTitle" value="'+esc(u.title||"")+'" placeholder="e.g. Reunion arrangements"></div><div class="full"><label>Message</label><textarea id="editUpdateBody" style="min-height:180px" placeholder="Type the message to show to classmates...">'+esc(u.body||"")+'</textarea></div></div><div class="actions"><button class="btn secondary" onclick="closeUpdateEdit()">Cancel</button><button class="btn" onclick="saveUpdateEdit('+u.id+')">Save Changes</button></div><div id="updateEditMsg"></div></div></div>');
+}
+function closeUpdateEdit(){
+  const el=$("updateEditOverlay"); if(el)el.remove();
+}
+async function saveUpdateEdit(id){
+  const title=$("editUpdateTitle")?.value.trim()||null, body=$("editUpdateBody")?.value.trim();
+  if(!body){const el=$("updateEditMsg");if(el)el.innerHTML='<div class="notice error">Please enter the update message.</div>';return;}
+  const r=await sb.from("reunion_class_updates").update({title,body}).eq("id",id);
+  if(r.error){const el=$("updateEditMsg");if(el)el.innerHTML='<div class="notice error">'+esc(r.error.message)+'</div>';return;}
+  closeUpdateEdit();
   await adminUpdates();
 }
 
