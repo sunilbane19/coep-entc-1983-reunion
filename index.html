@@ -60,22 +60,9 @@
 </style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"><section class="card"><h2>Welcome</h2><p class="stat">Loading the reunion site…</p></section></div></main><footer class="site-footer">COEP ENTC 1983</footer>
 <script>
 const $=id=>document.getElementById(id);
-let sb=null;
 const SUPABASE_URL="https://tizxolwmqrwvdheeqxrv.supabase.co";
 const SUPABASE_KEY="sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta";
-async function ensureSupabase(){
-  if(window.supabase?.createClient){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return sb;}
-  const urls=["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2","https://unpkg.com/@supabase/supabase-js@2"];
-  for(const src of urls){
-    try{
-      await new Promise((resolve,reject)=>{const el=document.createElement("script");el.src=src;el.async=true;el.onload=resolve;el.onerror=reject;document.head.appendChild(el)});
-      if(window.supabase?.createClient)break;
-    }catch(_){}
-  }
-  if(!window.supabase?.createClient)throw new Error("The secure sign-in service could not be loaded. Please refresh the page.");
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  return sb;
-}
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const LIVE_URL="https://coepentc83.com/";
 let user=null,member=null,members=[],photoUrls={},editingMember=null;const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));const init=n=>esc((n||"?").split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase());const indianPhone=s=>{const raw=String(s??"").trim();if(!raw)return"";const d=raw.replace(/\D/g,"");if(d.length===10)return"+91 "+d;if(d.length===11&&d.startsWith("0"))return"+91 "+d.slice(1);if(d.length===12&&d.startsWith("91"))return"+91 "+d.slice(2);if(raw.startsWith("+91"))return raw.replace(/^\+91\s*/,"+91 ");return"+91 "+raw.replace(/^\s+/,"");};
 const INDIA_STATES=["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Andaman and Nicobar Islands","Chandigarh","Dadra and Nagar Haveli and Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry"];
@@ -242,7 +229,6 @@ function withTimeout(promise,ms){
 }
 async function start(){
   try{
-    await ensureSupabase();
     user=null;
     member=null;
     editingMember=null;
