@@ -96,7 +96,7 @@ async function updatesPage(){
   const r=await sb.from("reunion_class_updates").select("id,title,body,created_at").order("created_at",{ascending:false});
   if(r.error)return $("app").innerHTML='<section class="card"><h2>Class Updates</h2><div class="notice error">'+esc(r.error.message)+'</div></section>';
   const rows=r.data||[];
-  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:15px;flex-wrap:wrap"><div><h2>Class Updates</h2><p class="stat">Announcements and messages for COEP ENTC 1983.</p></div><button class="btn secondary" onclick="go(\'home\')">Back Home</button></div><div class="update-list">'+(rows.map(updateCard).join("")||'<p class="stat">No updates have been posted yet.</p>')+'</div></section>';
+  $("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:15px;flex-wrap:wrap"><div><h2>Class Updates</h2><p class="stat">Announcements and messages for COEP ENTC 1983.</p></div></div><div class="update-list">'+(rows.map(updateCard).join("")||'<p class="stat">No updates have been posted yet.</p>')+'</div></section>';
 }
 async function adminUpdates(){
   if(!window.isAdmin)return go("home");
