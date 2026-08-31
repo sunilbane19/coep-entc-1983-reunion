@@ -51,7 +51,7 @@
 .update-admin-row h3{font-size:18px;margin-bottom:4px}
 .update-admin-row p{margin:0;color:var(--muted);white-space:pre-wrap;line-height:1.45}
 .update-admin-row .btn{padding:8px 11px;font-size:12px;flex:none}
-.site-footer{text-align:center;border-top:1px solid var(--line);background:#fffaf1;padding:18px 20px;color:var(--muted);font-family:Georgia,serif;font-size:16px;letter-spacing:.5px}
+.site-footer{text-align:center;border-top:1px solid var(--line);background:#fffaf1;padding:18px 20px;color:var(--muted);font-family:Georgia,serif;font-size:16px;letter-spacing:.5px}.admin-edit-actions{margin-top:12px;margin-bottom:16px}.admin-edit-actions .btn{min-width:100px}
 .required{color:#b44}
 @media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr}.home-copy h2{font-size:34px}.home-welcome-panel{height:205px}.home-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.home-card p{min-height:0}}
 @media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr;gap:10px}.home-copy{padding:16px}.home-copy h2{font-size:31px}.home-copy p{font-size:13px}.home-photo{height:205px}.home-photo-caption{font-size:20px;left:16px;bottom:12px}.home-cards{gap:8px}.home-card{padding:11px 6px}.home-card-icon{width:36px;height:36px;font-size:17px}.home-card h3{font-size:17px}.home-card p{font-size:11px;height:30px}.home-card .btn{font-size:10px;padding:7px 6px}}
@@ -208,8 +208,7 @@ editingMember={...m};
 editingMember.__originalPhotoPath=m.photo_path||null;
 editingMember.__removePhoto=false;
 window.adminEditing=true;
-location.hash="#profile";
-await profile(await prog());
+location.hash="#profile";await profile(await prog());window.scrollTo(0,0);
 }
 function previewPhoto(input){const file=input.files?.[0];if(!file)return;if(!file.type.startsWith("image/")){input.value="";return msg("Please choose an image file.",true)}if(file.size>5*1024*1024){input.value="";return msg("Photo must be 5 MB or smaller.",true)}const r=new FileReader();r.onload=()=>{const el=$("photoPreview");if(el)el.outerHTML='<img id="photoPreview" class="photo-preview" src="'+esc(r.result)+'" alt="Profile photo preview">'};r.readAsDataURL(file)}
 function removePhoto(){const target=window.adminEditing?editingMember:member;if(!target)return;if(!target.__originalPhotoPath)target.__originalPhotoPath=target.photo_path||null;const el=$("photoPreview");if(el)el.outerHTML='<div id="photoPreview" class="photo-preview" style="display:grid;place-items:center;font:bold 30px Georgia;color:#a84b0a">'+init(target.full_name)+'</div>';const i=$("photoInput");if(i)i.value="";target.photo_path=null;target.__removePhoto=true}
