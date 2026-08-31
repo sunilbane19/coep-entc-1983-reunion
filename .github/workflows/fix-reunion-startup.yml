@@ -1,0 +1,97 @@
+name: Fix reunion startup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repair startup loader
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+
+          old = re.search(r'const sb=window\.supabase\?\.createClient\("https://tizxolwmqrwvdheeqxrv\.supabase\.co","sb_publishable_[^"]+"\);if\(!sb\)\{.*?throw new Error\("Supabase client library failed to load"\);\}', s, re.S)
+          if not old:
+              print("Startup block already repaired or not found; nothing to do.")
+          else:
+              new = '''const $=id=>document.getElementById(id);
+          let sb=null;
+          const SUPABASE_URL="https://tizxolwmqrwvdheeqxrv.supabase.co";
+          const SUPABASE_KEY="sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta";
+          async function ensureSupabase(){
+            if(window.supabase?.createClient){
+              sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+              return sb;
+            }
+            const urls=[
+              "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+              "https://unpkg.com/@supabase/supabase-js@2"
+            ];
+            for(const src of urls){
+              try{
+                await new Promise((resolve,reject)=>{
+                  const existing=document.querySelector('script[data-supabase-loader]');
+                  if(existing){
+                    existing.addEventListener("load",resolve,{once:true});
+                    existing.addEventListener("error",()=>reject(new Error("load failed")),{once:true});
+                    return;
+                  }
+                  const el=document.createElement("script");
+                  el.src=src;
+                  el.async=true;
+                  el.dataset.supabaseLoader="1";
+                  el.onload=resolve;
+                  el.onerror=()=>reject(new Error("load failed"));
+                  document.head.appendChild(el);
+                });
+                if(window.supabase?.createClient) break;
+              }catch(_){}
+            }
+            if(!window.supabase?.createClient){
+              throw new Error("The secure sign-in service could not be loaded. Please refresh the page.");
+            }
+            sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+            return sb;
+          }'''
+              s = s[:old.start()] + new + s[old.end():]
+
+              # Remove the old duplicate $ declaration while keeping esc/init and the rest of that declaration.
+              s = s.replace('const $=id=>document.getElementById(id);const esc=', 'const esc=', 1)
+
+              # Make startup wait for the Supabase client before any render/auth work.
+              s = s.replace('async function start(){\n  try{\n    user=null;', 'async function start(){\n  try{\n    await ensureSupabase();\n    user=null;', 1)
+
+              p.write_text(s, encoding="utf-8")
+              print("Startup loader repaired.")
+
+          # Basic JavaScript syntax check on the inline script.
+          text = p.read_text(encoding="utf-8")
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
+          inline = scripts[-1]
+          Path("/tmp/reunion-inline.js").write_text(inline, encoding="utf-8")
+          PY
+          node --check /tmp/reunion-inline.js
+
+      - name: Commit repair
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix reunion site startup loading"
+          git push
