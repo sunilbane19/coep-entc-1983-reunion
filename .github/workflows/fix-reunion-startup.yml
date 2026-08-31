@@ -41,8 +41,7 @@ jobs:
           p.write_text(s,encoding="utf-8")
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
           python - <<'PY2'
-          s=Path("/tmp/reunion-inline.js").read_text(encoding="utf-8")
-          print(s[16600:17100])
+          print(scripts[-1][16600:17100])
           PY2
           Path("/tmp/reunion-inline.js").write_text(scripts[-1],encoding="utf-8")
           PY
