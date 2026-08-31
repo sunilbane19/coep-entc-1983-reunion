@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Repair startup loader and diagnose syntax
+      - name: Repair startup loader
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -36,7 +36,9 @@ jobs:
             s=s[:old.start()]+new+s[old.end():]
             s=s.replace('const $=id=>document.getElementById(id);const esc=','const esc=',1)
             s=s.replace('async function start(){\n  try{\n    user=null;','async function start(){\n  try{\n    await ensureSupabase();\n    user=null;',1)
-            p.write_text(s,encoding="utf-8")
+          # This malformed concatenation was causing the browser to stop parsing the whole script.
+          s=s.replace('+f("Class / Batch","class_batch",m.class_batch,true)</div><p class', '+f("Class / Batch","class_batch",m.class_batch,true)+\'</div><p class',1)
+          p.write_text(s,encoding="utf-8")
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
           Path("/tmp/reunion-inline.js").write_text(scripts[-1],encoding="utf-8")
           PY
@@ -46,9 +48,7 @@ jobs:
           const s=fs.readFileSync('/tmp/reunion-inline.js','utf8');
           try{acorn.parse(s,{ecmaVersion:'latest',sourceType:'script'});console.log('JavaScript syntax OK');}
           catch(e){
-            console.error('SYNTAX:',e.message,'at position',e.pos,'line',e.loc?.line,'column',e.loc?.column);
-            const lines=s.split('\n'); const line=lines[(e.loc?.line||1)-1]||'';
-            console.error(line.slice(Math.max(0,(e.loc?.column||0)-180),(e.loc?.column||0)+180));
+            console.error('SYNTAX:',e.message,'at',e.pos,'line',e.loc?.line,'column',e.loc?.column);
             process.exit(1);
           }
           JS
@@ -56,10 +56,6 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add index.html
-            git commit -m "Repair Supabase startup loader"
+            git commit -m "Fix reunion site startup and profile script"
             git push
           fi
-
-      - name: Commit no-op
-        if: failure()
-        run: echo "See syntax diagnostic above."
