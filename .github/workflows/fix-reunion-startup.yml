@@ -37,7 +37,7 @@ jobs:
             s=s.replace('const $=id=>document.getElementById(id);const esc=','const esc=',1)
             s=s.replace('async function start(){\n  try{\n    user=null;','async function start(){\n  try{\n    await ensureSupabase();\n    user=null;',1)
           # This malformed concatenation was causing the browser to stop parsing the whole script.
-          s=s.replace('+f("Class / Batch","class_batch",m.class_batch,true)</div><p class', '+f("Class / Batch","class_batch",m.class_batch,true)+\'</div><p class',1)
+          s=s.replace('+f("Class / Batch","class_batch",m.class_batch,true)</div><p class', '+f("Class / Batch","class_batch",m.class_batch,true)+"</div><p class', 1)
           p.write_text(s,encoding="utf-8")
           scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
           Path("/tmp/reunion-inline.js").write_text(scripts[-1],encoding="utf-8")
