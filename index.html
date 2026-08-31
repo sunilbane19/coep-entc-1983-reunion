@@ -56,6 +56,49 @@
 @media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr}.home-copy h2{font-size:34px}.home-welcome-panel{height:205px}.home-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.home-card p{min-height:0}}
 @media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr;gap:10px}.home-copy{padding:16px}.home-copy h2{font-size:31px}.home-copy p{font-size:13px}.home-photo{height:205px}.home-photo-caption{font-size:20px;left:16px;bottom:12px}.home-cards{gap:8px}.home-card{padding:11px 6px}.home-card-icon{width:36px;height:36px;font-size:17px}.home-card h3{font-size:17px}.home-card p{font-size:11px;height:30px}.home-card .btn{font-size:10px;padding:7px 6px}}
 @media(max-width:520px){.home-hero{grid-template-columns:1fr}.home-copy{min-height:175px}.home-photo{height:210px}.home-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.home-card h3{font-size:15px}.home-card p{font-size:10px}.home-card .btn{font-size:9px;padding:6px 4px}.classmate-grid{grid-template-columns:1fr}}
+
+/* Mobile responsive hardening — keeps the existing desktop design intact. */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+header,.container,footer{width:100%;max-width:100%}
+.top,.nav,.signedin{min-width:0}
+.nav{flex-wrap:wrap;align-items:center}
+.signedin{max-width:100%;overflow:hidden}
+.signedin b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+img,iframe{max-width:100%}
+button,input,textarea,select{max-width:100%}
+@media(max-width:1024px){
+  header{padding-left:16px;padding-right:16px}
+  .top{flex-wrap:wrap}
+  .nav{width:100%;justify-content:flex-start;gap:4px}
+  .nav button{flex:1 1 auto;min-width:0;padding:9px 8px}
+  .signedin{flex:1 1 150px;justify-content:center;min-width:0}
+  .container{padding-left:14px;padding-right:14px}
+  .card{padding:20px}
+  .home-hero{grid-template-columns:1fr}
+  .home-photo{height:230px}
+}
+@media(max-width:600px){
+  header{padding:9px 12px}
+  h1{font-size:26px}
+  .tag{font-size:11px;letter-spacing:2px}
+  .nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;gap:4px}
+  .nav button{width:100%;padding:8px 4px;font-size:12px;line-height:1.15}
+  .signedin{grid-column:1 / span 3;justify-content:flex-start;padding-left:4px}
+  .nav .signout{grid-column:4;grid-row:2}
+  .container{padding:6px 10px 32px}
+  .card{padding:16px;border-radius:18px}
+  .hero h2{font-size:36px}
+  .home-copy h2{font-size:32px}
+  .home-photo{height:200px}
+  .home-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .home-card{min-width:0}
+  .home-card h3{font-size:14px}
+  .home-card p{font-size:10px}
+  .grid,.detail-grid{grid-template-columns:1fr}
+  .full,.detail-item.full{grid-column:auto}
+  .photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .drive-frame{height:500px}
+}
 </style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"><section class="card"><h2>Welcome</h2><p class="stat">Loading the reunion site…</p></section></div></main><footer class="site-footer">COEP ENTC 1983</footer>
 <script>
 const sb=supabase.createClient("https://tizxolwmqrwvdheeqxrv.supabase.co","sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta");
