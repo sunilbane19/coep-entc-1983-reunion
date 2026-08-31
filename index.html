@@ -3,13 +3,16 @@
   window.__supabaseReady = new Promise(function(resolve,reject){
     if(window.supabase && window.supabase.createClient){ resolve(); return; }
     var sources=["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2","https://unpkg.com/@supabase/supabase-js@2"];
-    var i=0;
+    var i=0, finished=false;
+    var timer=setTimeout(function(){ if(!finished){ finished=true; reject(new Error("The sign-in service is taking too long to load. Please refresh the page and try again.")); } },8000);
+    function done(){ if(!finished){ finished=true; clearTimeout(timer); resolve(); } }
+    function fail(){ if(i>=sources.length){ if(!finished){ finished=true; clearTimeout(timer); reject(new Error("The sign-in service could not be loaded. Please check your internet connection and refresh the page.")); } return; } load(); }
     function load(){
-      if(window.supabase && window.supabase.createClient){resolve();return;}
-      if(i>=sources.length){reject(new Error("The sign-in service could not be loaded. Please check your internet connection and refresh the page."));return;}
+      if(window.supabase && window.supabase.createClient){done();return;}
+      if(i>=sources.length){fail();return;}
       var s=document.createElement("script"); s.src=sources[i++]; s.async=true;
-      s.onload=function(){ if(window.supabase&&window.supabase.createClient) resolve(); else load(); };
-      s.onerror=load; document.head.appendChild(s);
+      s.onload=function(){ if(window.supabase&&window.supabase.createClient) done(); else fail(); };
+      s.onerror=fail; document.head.appendChild(s);
     }
     load();
   });
@@ -95,7 +98,7 @@ function go(x){if(x==="profile"||x==="directory"){window.adminEditing=false;edit
 async function load(){const {data}=await sb.from("reunion_members").select("*").eq("auth_user_id",user.id).maybeSingle();member=data||null;if(member){if(member.photo_path){const u=await sb.storage.from("reunion-photos").createSignedUrl(member.photo_path,3600);if(u.data?.signedUrl)photoUrls[member.id]=u.data.signedUrl}const r=await sb.from("reunion_roles").select("role").eq("member_id",member.id).maybeSingle();window.isAdmin=r.data?.role==="admin"}}
 async function prog(){const {data}=await sb.from("reunion_progress").select("*").single();return data||{total_members:0,completed_members:0,completion_percent:0}}
 async function render(){if(!user){nav();$("app").innerHTML='<section class="card"><h2>Welcome</h2><p class="stat">Enter the email address registered for your class record and we’ll send you a one-time sign-in link.</p><label>Email address</label><input id="email" type="email" placeholder="you@example.com"><div class="actions"><button class="btn" onclick="sendLink()">Send sign-in link</button></div><div id="msg"></div><p class="small">On your first visit, you’ll be asked to match yourself to the class list.</p></section>';return}if(!member)await load();nav();if(!member){$("app").innerHTML='<section class="card"><h2>Find your class record</h2><p class="stat">Your sign-in is recognised, but your class record has not yet been linked. Please contact the reunion administrator.</p><div class="actions"><button class="btn secondary" onclick="logout()">Sign out</button></div><div id="msg"></div></section>';return}const p=await prog();if(location.hash==="#directory")return directory(p);if(location.hash==="#profile")return profile(p);if(location.hash==="#photos")return photosPage();if(location.hash==="#updates")return updatesPage();if(location.hash==="#admin"&&window.isAdmin)return adminPage();return homePage(p)}
-async function sendLink(){const e=$("email").value.trim().toLowerCase();if(!e)return msg("Please enter your email.",true);const check=await sb.rpc("reunion_email_is_registered",{p_email:e});if(check.error)return msg("We couldn't verify that email right now. Please try again.",true);if(!check.data)return msg("That email address is not in our class records. Please check it or contact the reunion administrator.",true);const {error}=await sb.auth.signInWithOtp({email:e,options:{emailRedirectTo:LIVE_URL,shouldCreateUser:false}});msg(error?error.message:"Check your email for the sign-in link.")}
+async function sendLink(){const e=$("email").value.trim().toLowerCase();if(!e)return msg("Please enter your email.",true);if(!sb)return msg("The sign-in service is still loading. Please wait a few seconds and try again.",true);const check=await sb.rpc("reunion_email_is_registered",{p_email:e});if(check.error)return msg("We couldn't verify that email right now. Please try again.",true);if(!check.data)return msg("That email address is not in our class records. Please check it or contact the reunion administrator.",true);const {error}=await sb.auth.signInWithOtp({email:e,options:{emailRedirectTo:LIVE_URL,shouldCreateUser:false}});msg(error?error.message:"Check your email for the sign-in link.")}
 async function claim(){const ph=indianPhone($("claimphone").value);if(!ph)return msg("Please enter your mobile / WhatsApp number.",true);const {data,error}=await sb.rpc("reunion_claim_by_phone",{p_phone:ph});if(error)return msg(error.message,true);await load();render()}
 async function logout(){await sb.auth.signOut();user=null;member=null;render()}
 async function directory(p){$("app").innerHTML='<section class="card"><div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-end"><div><h2>Classmates</h2><div class="stat"><b>'+p.completed_members+' of '+p.total_members+'</b> have completed their forms</div></div><button class="btn" onclick="go(\'profile\')">My Profile</button></div><div class="notice">Click any classmate to view their full profile. All information is optional and is visible to all logged-in classmates.</div><div class="progress"><i style="width:'+p.completion_percent+'%"></i></div><label>Search classmates</label><input id="q" placeholder="Name, city, profession, company..." oninput="filter()"><div id="list"></div><p class="small">All profile information is optional. Any information a classmate has entered, including detailed home address, is visible to logged-in classmates.</p><div class="actions"><button class="btn secondary" onclick="logout()">Sign out</button></div></section>';const r=await sb.from("reunion_directory").select("*").order("full_name");if(r.error)return $("list").innerHTML='<div class="notice error">'+esc(r.error.message)+'</div>';members=r.data||[];photoUrls={};await Promise.all(members.map(async m=>{if(!m.photo_path)return;const u=await sb.storage.from("reunion-photos").createSignedUrl(m.photo_path,3600);if(u.data?.signedUrl)photoUrls[m.id]=u.data.signedUrl}));filter()}
@@ -245,16 +248,15 @@ function withTimeout(promise,ms){
   return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error("timeout")),ms))]);
 }
 async function start(){
+  user=null;
+  member=null;
+  editingMember=null;
+  window.adminEditing=false;
+  window.isAdmin=false;
+  await render();
   try{
     await window.__supabaseReady;
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    user=null;
-    member=null;
-    editingMember=null;
-    window.adminEditing=false;
-    window.isAdmin=false;
-    await render();
-
     try{
       const s=await withTimeout(sb.auth.getSession(),8000);
       if(s.error)throw s.error;
@@ -270,10 +272,11 @@ async function start(){
     }
   }catch(e){
     console.error("Reunion app startup error:",e);
-    $("app").innerHTML='<section class="card"><h2>We could not open the reunion site</h2><div class="notice error">'+esc(e?.message||String(e))+'</div><div class="actions"><button class="btn" onclick="location.reload()">Try again</button></div></section>';
+    const m=document.getElementById("msg");
+    if(m)m.innerHTML='<div class="notice error">'+esc(e?.message||String(e))+'</div>';
   }
 
-  sb.auth.onAuthStateChange((event,sess)=>{
+  if(sb)sb.auth.onAuthStateChange((event,sess)=>{
     user=sess?.user||null;
     member=null;
     editingMember=null;
