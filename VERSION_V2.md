@@ -20,8 +20,8 @@ Current controls verified:
 - No service-role key or hard-coded administrator email was found in the repository search.
 
 Follow-up hardening noted:
-- The public email-registration RPC intentionally reveals whether an email is present in the class list. This supports the current login UX but permits email-list enumeration by an unauthenticated caller. Consider replacing it with a non-enumerating login response or moving the check server-side.
-- The authenticated self-update policy permits a member to update all columns of their own reunion_members row. This should be narrowed to profile-editable columns in a future hardening pass, especially auth_user_id and role-related identity fields.
+- The pre-login email-registration RPC was removed. The login flow now requests the magic link without first revealing whether an email exists in the class list, reducing email-list enumeration.
+- Authenticated UPDATE privileges on reunion_members are now limited to profile-editable columns. Protected identity, role, audit, and completion fields such as auth_user_id, reunion_notes, profile_completed, and timestamps cannot be changed by a member through direct table UPDATE.
 - The unused authenticated claim-by-phone RPC should be reviewed/removed or tightened if no longer required.
 
 This release is a tested application baseline, not a guarantee of immunity from all attacks.
