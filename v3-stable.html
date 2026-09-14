@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COEP ENTC 1983 — V3</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#fbf5e9}#status{font:16px Arial,sans-serif;padding:24px;color:#555}</style>
+</head>
+<body>
+<div id="status">Loading COEP ENTC 1983 Reunion V3…</div>
+<script>
+(function(){
+  var frame=document.createElement('iframe');
+  frame.id='app';frame.title='COEP ENTC 1983 Reunion';
+  frame.style='display:block;width:100%;height:100vh;min-height:100vh;border:0;background:#fbf5e9';
+  frame.src='/';
+  document.body.appendChild(frame);
+  frame.addEventListener('load',function(){
+    var status=document.getElementById('status');if(status)status.style.display='none';
+    try{
+      var d=frame.contentDocument;
+      var filters=d.querySelector('.admin-filters');
+      if(filters&&!d.getElementById('v3Actions')){
+        var box=d.createElement('div');box.id='v3Actions';box.style='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:4px';
+        [['↗ Share',function(){window.open('/v3-share.html','_blank')}],['Print',function(){frame.contentWindow.print()}]].forEach(function(x){var b=d.createElement('button');b.className='btn secondary';b.type='button';b.textContent=x[0];b.onclick=x[1];box.appendChild(b)});
+        filters.appendChild(box);
+      }
+    }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
