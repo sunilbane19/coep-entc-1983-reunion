@@ -24,6 +24,12 @@ iframe{display:block;width:100%;height:100vh;border:0}
     html=html.replace(/<base[^>]*>/i,'');
     html=html.replace(/emailRedirectTo\s*:\s*LIVE_URL/g,"emailRedirectTo:location.origin+'/v3-auth.html'");
     html=html.replace(/<head([^>]*)>/i,'<head$1><base href="/">');
+    html=html.replace(/<\/body>/i,
+      '<script src="/v3-enhancements.js?v=20260914-5"><\\/script>'+
+      '<script src="/v3-fixes.js?v=20260914-5"><\\/script>'+
+      '<script src="/v3-final-fixes.js?v=20260914-2"><\\/script>'+
+      '<script src="/v3-login-patch.js?v=20260914-1"><\\/script>'+
+      '<script src="/v3-ui-patch.js?v=20260914-5"><\\/script></body>');
     frame.srcdoc=html;
     frame.style.display='block';
     status.remove();
@@ -32,6 +38,5 @@ iframe{display:block;width:100%;height:100vh;border:0}
   }
 })();
 </script>
-<script src="/v3-loader.js?v=20260914-6"></script>
 </body>
 </html>
