@@ -8,7 +8,7 @@
       if(d.getElementById('v3EnhancementsLoader'))return true;
       var s=d.createElement('script');
       s.id='v3EnhancementsLoader';
-      s.src='/v3-enhancements.js';
+      s.src='/v3-enhancements-v2.js';
       d.body.appendChild(s);
       return true;
     }catch(e){return false;}
