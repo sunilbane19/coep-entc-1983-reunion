@@ -40,7 +40,8 @@
     const w=frame.contentWindow,d=frame.contentDocument;
     const f=w?.adminFilter||'all';
     const q=(d?.getElementById('adminQ')?.value||'').trim();
-    return LABELS[f]||'All'+(q?' — Search: '+q:'');
+    const base=LABELS[f]||'All';
+    return q?base+' — Search: '+q:base;
   }
   function downloadExcel(){
     const rows=shareRows();
@@ -55,11 +56,9 @@
   }
   function printList(){
     const rows=shareRows();
-    const d=frame.contentDocument;
-    const q=(d?.getElementById('adminQ')?.value||'').trim();
     const date=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
     const title='COEP ENTC 1983 — Class Reunion';
-    const sub=filterLabel()+(q?'':'')+' | '+date;
+    const sub=filterLabel()+' | '+date;
     const table=rows.map(r=>'<tr><td>'+esc(r.sn)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.address)+'</td><td>'+esc(r.city)+'</td><td>'+esc(r.phone)+'</td><td>'+esc(r.email)+'</td></tr>').join('');
     const win=window.open('','_blank','width=1200,height=800');
     if(!win){alert('Please allow pop-ups for this site to print the list.');return;}
