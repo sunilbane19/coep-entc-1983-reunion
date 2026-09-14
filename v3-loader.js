@@ -8,19 +8,19 @@
       if(d.getElementById('v3EnhancementsLoader'))return true;
       var s=d.createElement('script');
       s.id='v3EnhancementsLoader';
-      s.src='/v3-enhancements.js';
+      s.src='/v3-enhancements.js?v=20260914-3';
       d.body.appendChild(s);
       s.addEventListener('load',function(){
         if(d.getElementById('v3FixesLoader'))return;
         var f2=d.createElement('script');
         f2.id='v3FixesLoader';
-        f2.src='/v3-fixes.js';
+        f2.src='/v3-fixes.js?v=20260914-4';
         d.body.appendChild(f2);
         f2.addEventListener('load',function(){
           if(d.getElementById('v3FinalFixesLoader'))return;
           var f3=d.createElement('script');
           f3.id='v3FinalFixesLoader';
-          f3.src='/v3-final-fixes.js';
+          f3.src='/v3-final-fixes.js?v=20260914-2';
           d.body.appendChild(f3);
         });
       });
@@ -33,9 +33,7 @@
     f.addEventListener('load',function(){inject();});
     if(f.contentDocument && f.contentDocument.readyState==='complete')inject();
     var n=0;
-    var t=setInterval(function(){
-      if(inject()||++n>20)clearInterval(t);
-    },250);
+    var t=setInterval(function(){if(inject()||++n>20)clearInterval(t);},250);
   }
   start();
 })();
