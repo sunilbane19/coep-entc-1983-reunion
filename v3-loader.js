@@ -8,8 +8,15 @@
       if(d.getElementById('v3EnhancementsLoader'))return true;
       var s=d.createElement('script');
       s.id='v3EnhancementsLoader';
-      s.src='/v3-enhancements-v2.js';
+      s.src='/v3-enhancements.js';
       d.body.appendChild(s);
+      s.addEventListener('load',function(){
+        if(d.getElementById('v3FixesLoader'))return;
+        var f2=d.createElement('script');
+        f2.id='v3FixesLoader';
+        f2.src='/v3-fixes.js';
+        d.body.appendChild(f2);
+      });
       return true;
     }catch(e){return false;}
   }
