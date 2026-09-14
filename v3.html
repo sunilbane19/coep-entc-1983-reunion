@@ -23,9 +23,7 @@ iframe{display:block;width:100%;height:100vh;border:0}
     var html=await r.text();
     html=html.replace(/<base[^>]*>/i,'');
     html=html.replace(/emailRedirectTo\s*:\s*LIVE_URL/g,"emailRedirectTo:location.origin+'/v3-auth.html'");
-    if(!/<base\s/i.test(html)){
-      html=html.replace(/<head([^>]*)>/i,'<head$1><base href="/">');
-    }
+    html=html.replace(/<head([^>]*)>/i,'<head$1><base href="/">');
     frame.srcdoc=html;
     frame.style.display='block';
     status.remove();
@@ -34,7 +32,6 @@ iframe{display:block;width:100%;height:100vh;border:0}
   }
 })();
 </script>
-<script src="/v3-loader.js?v=20260914-5"></script>
-<script src="/v3-ui-patch.js?v=20260914-5"></script>
+<script src="/v3-loader.js?v=20260914-6"></script>
 </body>
 </html>
