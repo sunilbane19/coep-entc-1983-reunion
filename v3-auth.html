@@ -15,26 +15,31 @@
 <script>
 (async function(){
   const status=document.getElementById('status');
-  const sb=supabase.createClient('https://tizxolwmqrwvdheeqxrv.supabase.co','sb_publishable_lYUj7I1I7Rij5o0ptqPWrAq',{
-    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-  });
-  let completed=false;
-  function finish(){
-    if(completed)return;
-    completed=true;
-    try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
-    try{window.opener&&window.opener.postMessage({type:'v3_auth_complete'},location.origin);}catch(e){}
-    setTimeout(function(){try{window.close();}catch(e){}},250);
-    setTimeout(function(){location.replace('/v3.html#admin');},500);
-  }
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){finish();return;}
-  sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'))finish();});
-  setTimeout(async()=>{
+  try{
+    const html=await fetch('/',{cache:'no-store'}).then(r=>r.text());
+    const m=html.match(/supabase\.createClient\(["']([^"']+)["'],["']([^"']+)["']/);
+    if(!m)throw new Error('Supabase configuration not found');
+    const sb=supabase.createClient(m[1],m[2],{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    let completed=false;
+    function finish(){
+      if(completed)return;
+      completed=true;
+      try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
+      try{window.opener&&window.opener.postMessage({type:'v3_auth_complete'},location.origin);}catch(e){}
+      setTimeout(function(){try{window.close();}catch(e){}},250);
+      setTimeout(function(){location.replace('/v3.html#admin');},500);
+    }
     const {data:{session}}=await sb.auth.getSession();
     if(session){finish();return;}
+    sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'))finish();});
+    setTimeout(async()=>{
+      const {data:{session}}=await sb.auth.getSession();
+      if(session){finish();return;}
+      status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';
+    },5000);
+  }catch(e){
     status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';
-  },5000);
+  }
 })();
 </script>
 </body>
