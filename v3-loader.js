@@ -16,6 +16,13 @@
         f2.id='v3FixesLoader';
         f2.src='/v3-fixes.js';
         d.body.appendChild(f2);
+        f2.addEventListener('load',function(){
+          if(d.getElementById('v3FinalFixesLoader'))return;
+          var f3=d.createElement('script');
+          f3.id='v3FinalFixesLoader';
+          f3.src='/v3-final-fixes.js';
+          d.body.appendChild(f3);
+        });
       });
       return true;
     }catch(e){return false;}
