@@ -1,3 +1,54 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COEP ENTC 1983 — V3</title><style>html,body{margin:0;width:100%;min-height:100%;background:#fbf5e9}#status{font:16px Arial,sans-serif;padding:24px;color:#555}</style></head><body><div id="status">Loading COEP ENTC 1983 Reunion V3…</div><script>
-(async function(){try{const r=await fetch('/',{cache:'no-store'});if(!r.ok)throw new Error('Unable to load the reunion application.');let html=await r.text();html=html.replace(/<base[^>]*>/i,'').replace(/<head([^>]*)>/i,'<head$1><base href="/">');html=html.split(atob('ZW1haWxSZWRpcmVjdFRvOkxJVkVfVVJM')).join("emailRedirectTo:location.origin+'/v3-auth.html'");html=html.replace(/<\\/body>/i,'<script src="/v3-enhancements.js"><\\/script></body>');document.open();document.write(html);document.close();}catch(e){const s=document.getElementById('status');if(s)s.textContent=e.message||'Unable to load the reunion application.';}})();
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COEP ENTC 1983 — V3</title>
+<style>html,body{margin:0;width:100%;min-height:100%;background:#fbf5e9}#status{font:16px Arial,sans-serif;padding:24px;color:#555}</style>
+</head>
+<body>
+<div id="status">Loading COEP ENTC 1983 Reunion V3…</div>
+<script>
+(async function(){
+  const status=document.getElementById('status');
+  try{
+    const r=await fetch('/',{cache:'no-store'});
+    if(!r.ok) throw new Error('Unable to load the reunion application.');
+    let html=await r.text();
+    html=html.replace(/<base[^>]*>/i,'');
+    html=html.replace(/emailRedirectTo\s*:\s*LIVE_URL/g,"emailRedirectTo:location.origin+'/v3-auth.html'");
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    document.title=doc.title||'COEP ENTC 1983 — Reunion Directory';
+    document.documentElement.lang=doc.documentElement.lang||'en';
+    const head=document.head;
+    Array.from(doc.head.children).forEach(function(node){
+      if(node.tagName.toLowerCase()==='title')return;
+      if(node.tagName.toLowerCase()==='script'){
+        const s=document.createElement('script');
+        Array.from(node.attributes).forEach(function(a){s.setAttribute(a.name,a.value);});
+        s.textContent=node.textContent;
+        if(s.src)s.async=false;
+        head.appendChild(s);
+      }else{
+        head.appendChild(document.importNode(node,true));
+      }
+    });
+    document.body.innerHTML=doc.body.innerHTML;
+    Array.from(doc.body.querySelectorAll('script')).forEach(function(node){
+      const s=document.createElement('script');
+      Array.from(node.attributes).forEach(function(a){s.setAttribute(a.name,a.value);});
+      s.textContent=node.textContent;
+      if(s.src)s.async=false;
+      document.body.appendChild(s);
+    });
+    const enh=document.createElement('script');
+    enh.src='/v3-enhancements.js';
+    enh.async=false;
+    document.body.appendChild(enh);
+  }catch(e){
+    if(status)status.textContent=e.message||'Unable to load the reunion application.';
+  }
+})();
+</script>
+</body>
+</html>
