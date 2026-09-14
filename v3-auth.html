@@ -20,7 +20,13 @@
     let completed=false,returnHash='#home';
     try{returnHash=localStorage.getItem('v3_return_hash')||'#home';}catch(e){}
     if(!/^#/.test(returnHash))returnHash='#home';
-    function finish(){if(completed)return;completed=true;try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:returnHash},location.origin);}catch(e){}try{window.close();}catch(e){}setTimeout(function(){location.replace('/v3.html'+returnHash);},1000);}
+    function finish(){
+      if(completed)return;completed=true;
+      try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
+      try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:returnHash},location.origin);}catch(e){}
+      try{window.close();}catch(e){}
+      setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html'+returnHash);},700);
+    }
     const {data:{session}}=await sb.auth.getSession();
     if(session){finish();return;}
     sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'))finish();});
