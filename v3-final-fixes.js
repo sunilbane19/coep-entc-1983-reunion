@@ -13,20 +13,29 @@
     updates.parentNode.insertBefore(b,updates.nextSibling);
   }
 
-  function setNextAlbumOrder(){
-    var title=document.getElementById('v3AlbumTitle');
+  /* Present album order as 1, 2, 3... rather than the original 10, 20 scheme.
+     Existing sort_order values are still accepted, and saving an album normalises
+     the edited value to its visible position. */
+  function normaliseAlbumOrderField(){
+    var id=document.getElementById('v3AlbumId');
     var order=document.getElementById('v3AlbumOrder');
-    if(!title||!order||order.value!=='0')return;
-    sb.from('reunion_photo_albums').select('sort_order').order('sort_order',{ascending:false}).limit(1).then(function(r){
-      var max=r.data&&r.data.length?Number(r.data[0].sort_order||0):0;
-      order.value=String(max+1);
+    if(!order)return;
+    sb.from('reunion_photo_albums').select('id,sort_order').order('sort_order',{ascending:true}).order('id',{ascending:true}).then(function(r){
+      if(r.error||!r.data)return;
+      var list=r.data;
+      if(id&&id.value){
+        var idx=list.findIndex(function(x){return Number(x.id)===Number(id.value);});
+        if(idx>=0)order.value=String(idx+1);
+      }else{
+        order.value=String(list.length+1);
+      }
     });
   }
 
   function wrapAlbumForm(){
     if(typeof window.v3ShowAlbumForm!=='function'||window.v3ShowAlbumForm.__v3Wrapped)return;
     var original=window.v3ShowAlbumForm;
-    function wrapped(a){original(a);if(!a)setTimeout(setNextAlbumOrder,0);}
+    function wrapped(a){original(a);setTimeout(normaliseAlbumOrderField,0);}
     wrapped.__v3Wrapped=true;
     window.v3ShowAlbumForm=wrapped;
   }
@@ -52,8 +61,7 @@
     wrapAlbumForm();
   }
 
-  /* The email-link callback writes this signal when authentication completes.
-     The original V3 tab reacts here, so the user does not need to keep navigating tabs. */
+  /* The email-link callback writes this signal when authentication completes. */
   window.addEventListener('storage',function(e){
     if(e.key==='v3_auth_complete')syncAfterExternalAuth();
   });
@@ -62,7 +70,7 @@
      the storage event is not observed by the embedded document. */
   try{
     if(typeof sb!=='undefined')sb.auth.onAuthStateChange(function(event,session){
-      if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'))syncAfterExternalAuth();
+      if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'))syncAfterExternalAuth();
     });
   }catch(e){}
 
