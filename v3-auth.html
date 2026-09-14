@@ -17,10 +17,11 @@
     const m=html.match(/supabase\.createClient\(["']([^"']+)["'],["']([^"']+)["']/);
     if(!m)throw new Error('Supabase configuration not found');
     const sb=supabase.createClient(m[1],m[2],{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    const returnHash='#home';
+    let completed=false;
     function finish(){
-      try{localStorage.setItem('v3_auth_complete',String(Date.now()));localStorage.setItem('v3_return_hash',returnHash);}catch(e){}
-      try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:returnHash},location.origin);}catch(e){}
+      if(completed)return;completed=true;
+      try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
+      try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:'#home'},location.origin);}catch(e){}
       try{window.close();}catch(e){}
       setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html#home');},700);
     }
