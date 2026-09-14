@@ -12,11 +12,10 @@
 <script>
 (async function(){
   const status=document.getElementById('status');
+  const SUPABASE_URL='https://tizxolwmqrwvdheeqxrv.supabase.co';
+  const SUPABASE_KEY='sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta';
   try{
-    const html=await fetch('/',{cache:'no-store'}).then(r=>r.text());
-    const m=html.match(/supabase\.createClient\(["']([^"']+)["'],["']([^"']+)["']/);
-    if(!m)throw new Error('Supabase configuration not found');
-    const sb=supabase.createClient(m[1],m[2],{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});
     let completed=false;
     function finish(){
       if(completed)return;completed=true;
@@ -25,11 +24,29 @@
       try{window.close();}catch(e){}
       setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html#home');},700);
     }
+    const p=new URLSearchParams(location.search);
+    const code=p.get('code');
+    const tokenHash=p.get('token_hash');
+    const type=p.get('type');
+    if(code){
+      status.textContent='Completing secure sign-in…';
+      const r=await sb.auth.exchangeCodeForSession(code);
+      if(r.error)throw r.error;
+      finish();return;
+    }
+    if(tokenHash&&type){
+      status.textContent='Completing secure sign-in…';
+      const r=await sb.auth.verifyOtp({token_hash:tokenHash,type:type});
+      if(r.error)throw r.error;
+      finish();return;
+    }
     const {data:{session}}=await sb.auth.getSession();
     if(session){finish();return;}
     sb.auth.onAuthStateChange((event,session)=>{if(session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED'))finish();});
-    setTimeout(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){finish();return;}status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';},5000);
-  }catch(e){status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';}
+    setTimeout(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){finish();return;}status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';},6000);
+  }catch(e){
+    status.textContent='The sign-in link could not be completed. Please request a fresh sign-in link.';
+  }
 })();
 </script>
 </body>
