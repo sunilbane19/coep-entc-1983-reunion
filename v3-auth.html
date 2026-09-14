@@ -8,7 +8,7 @@
 <style>body{margin:0;background:#fbf5e9;color:#3e2919;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh}.card{background:#fffdf8;border:1px solid #dfcfb3;border-radius:20px;padding:28px;max-width:520px;margin:20px;text-align:center}h1{font:700 26px Georgia,serif;margin:0 0 10px}.small{color:#8d7862}</style>
 </head>
 <body>
-<section class="card"><h1>Signing you in…</h1><p id="status" class="small">Please wait. You will be returned to the page you were using.</p></section>
+<section class="card"><h1>Signing you in…</h1><p id="status" class="small">Please wait. You will be returned to the Reunion home page.</p></section>
 <script>
 (async function(){
   const status=document.getElementById('status');
@@ -17,15 +17,12 @@
     const m=html.match(/supabase\.createClient\(["']([^"']+)["'],["']([^"']+)["']/);
     if(!m)throw new Error('Supabase configuration not found');
     const sb=supabase.createClient(m[1],m[2],{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    let completed=false,returnHash='#home';
-    try{returnHash=localStorage.getItem('v3_return_hash')||'#home';}catch(e){}
-    if(!/^#/.test(returnHash))returnHash='#home';
+    const returnHash='#home';
     function finish(){
-      if(completed)return;completed=true;
-      try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
+      try{localStorage.setItem('v3_auth_complete',String(Date.now()));localStorage.setItem('v3_return_hash',returnHash);}catch(e){}
       try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:returnHash},location.origin);}catch(e){}
       try{window.close();}catch(e){}
-      setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html'+returnHash);},700);
+      setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html#home');},700);
     }
     const {data:{session}}=await sb.auth.getSession();
     if(session){finish();return;}
