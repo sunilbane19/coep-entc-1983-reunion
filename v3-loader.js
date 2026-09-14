@@ -1,1 +1,27 @@
-eval(atob('d2luZG93LmFkZEV2ZW50TGlzdGVuZXIoJ2xvYWQnLGZ1bmN0aW9uKCl7dmFyIGY9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2FwcCcpO2lmKCFmKXJldHVybjtmLmFkZEV2ZW50TGlzdGVuZXIoJ2xvYWQnLGZ1bmN0aW9uKCl7dHJ5e3ZhciBkPWYuY29udGVudERvY3VtZW50O2lmKCFkfHwhZC5ib2R5KXJldHVybjt2YXIgcz1kLmNyZWF0ZUVsZW1lbnQoJ3NjcmlwdCcpO3Muc3JjPScvdjMtZW5oYW5jZW1lbnRzLmpzJztkLmJvZHkuYXBwZW5kQ2hpbGQocyl9Y2F0Y2goZSl7fX0pfSk7'))
+(function(){
+  function inject(){
+    var f=document.getElementById('app');
+    if(!f)return false;
+    try{
+      var d=f.contentDocument;
+      if(!d||!d.body)return false;
+      if(d.getElementById('v3EnhancementsLoader'))return true;
+      var s=d.createElement('script');
+      s.id='v3EnhancementsLoader';
+      s.src='/v3-enhancements.js';
+      d.body.appendChild(s);
+      return true;
+    }catch(e){return false;}
+  }
+  function start(){
+    var f=document.getElementById('app');
+    if(!f)return;
+    f.addEventListener('load',function(){inject();});
+    if(f.contentDocument && f.contentDocument.readyState==='complete')inject();
+    var n=0;
+    var t=setInterval(function(){
+      if(inject()||++n>20)clearInterval(t);
+    },250);
+  }
+  start();
+})();
