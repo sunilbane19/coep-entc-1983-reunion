@@ -1,1 +1,40 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COEP ENTC 1983 — V3</title><style>html,body{margin:0;width:100%;height:100%;background:#fbf5e9}iframe{display:block;width:100%;height:100vh;border:0}</style></head><body><iframe id="app" src="/" title="COEP ENTC 1983 Reunion"></iframe><script>(function(){var f=document.getElementById('app');if(!f)return;var initial=location.hash||'#home';function toFrame(){try{var h=location.hash||'#home';if(f.contentWindow.location.hash!==h)f.contentWindow.location.hash=h;}catch(e){}}function toParent(){try{var h=f.contentWindow.location.hash||'#home';if(h&&location.hash!==h)location.hash=h;}catch(e){}}window.addEventListener('hashchange',toFrame);f.addEventListener('load',function(){setTimeout(function(){toFrame();setTimeout(toParent,500);},50);});})();</script><script src="/v3-loader.js"></script><script src="/v3-ui-patch.js?v=20260914-4"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>COEP ENTC 1983 — V3</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:#fbf5e9}
+iframe{display:block;width:100%;height:100vh;border:0}
+#status{padding:24px;font:16px Arial,sans-serif;color:#8d7862}
+</style>
+</head>
+<body>
+<div id="status">Loading the reunion site…</div>
+<iframe id="app" title="COEP ENTC 1983 Reunion" style="display:none"></iframe>
+<script>
+(async function(){
+  var status=document.getElementById('status');
+  var frame=document.getElementById('app');
+  try{
+    var r=await fetch('/',{cache:'no-store'});
+    if(!r.ok)throw new Error('Unable to load the reunion application.');
+    var html=await r.text();
+    html=html.replace(/<base[^>]*>/i,'');
+    html=html.replace(/emailRedirectTo\s*:\s*LIVE_URL/g,"emailRedirectTo:location.origin+'/v3-auth.html'");
+    if(!/<base\s/i.test(html)){
+      html=html.replace(/<head([^>]*)>/i,'<head$1><base href="/">');
+    }
+    frame.srcdoc=html;
+    frame.style.display='block';
+    status.remove();
+  }catch(e){
+    status.textContent=e.message||'Unable to load the reunion application.';
+  }
+})();
+</script>
+<script src="/v3-loader.js?v=20260914-5"></script>
+<script src="/v3-ui-patch.js?v=20260914-5"></script>
+</body>
+</html>
