@@ -2,6 +2,7 @@
   'use strict';
   var STYLE_ID='v3AdminToolsStyle';
   var BUTTONS_ID='v3AdminToolsButtons';
+  var ALBUM_BUTTON_ID='v3AdminAlbumsButton';
   var patched=false;
   function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
   function currentRows(){
@@ -32,6 +33,17 @@
     var s=document.createElement('style');s.id=STYLE_ID;
     s.textContent='.v3-admin-tools{display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap}.v3-admin-tools .btn{padding:8px 12px;font-size:12px;white-space:nowrap}@media(max-width:700px){.v3-admin-tools{gap:5px}.v3-admin-tools .btn{padding:7px 9px;font-size:11px}}';
     document.head.appendChild(s);
+  }
+  function addAdminAlbumsButton(){
+    if(!window.isAdmin||document.getElementById(ALBUM_BUTTON_ID)) return;
+    var buttons=Array.from(document.querySelectorAll('#app .actions button'));
+    var updates=buttons.find(function(b){return b.textContent.trim()==='Class Updates';});
+    var add=buttons.find(function(b){return b.textContent.trim()==='+ Add New Member';});
+    if(!updates&&!add) return;
+    var b=document.createElement('button');
+    b.id=ALBUM_BUTTON_ID;b.className='btn secondary';b.type='button';b.textContent='Photo Albums';
+    b.onclick=function(){location.href='/v3/admin-albums.html';};
+    (add||updates).parentNode.insertBefore(b,add||null);
   }
   function addButtons(){
     var filters=document.querySelector('.admin-filters');
@@ -76,7 +88,7 @@
     if(patched)return true;
     if(typeof window.adminPage==='function'&&!window.adminPage.__v3Clean){
       var originalAdminPage=window.adminPage;
-      var wrappedAdminPage=async function(){await originalAdminPage.apply(this,arguments);polishAdminLabels();addButtons();};
+      var wrappedAdminPage=async function(){await originalAdminPage.apply(this,arguments);polishAdminLabels();addAdminAlbumsButton();addButtons();};
       wrappedAdminPage.__v3Clean=true;window.adminPage=wrappedAdminPage;
     }
     if(typeof window.adminAdd==='function'&&!window.adminAdd.__v3Clean){
@@ -87,7 +99,7 @@
     patched=(typeof window.adminPage==='function'&&window.adminPage.__v3Clean)&&(typeof window.adminAdd==='function'&&window.adminAdd.__v3Clean);
     return patched;
   }
-  function install(){patchNavigation();addButtons();polishAdminLabels();removeBackToAdmin();}
+  function install(){patchNavigation();addAdminAlbumsButton();addButtons();polishAdminLabels();removeBackToAdmin();}
   var n=0,t=setInterval(function(){install();if(++n>40)clearInterval(t);},250);install();
 
   // If the magic link opens in a second tab, the original V3 sign-in tab
