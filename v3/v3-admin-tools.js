@@ -3,6 +3,7 @@
   var STYLE_ID='v3AdminToolsStyle';
   var BUTTONS_ID='v3AdminToolsButtons';
   var ALBUM_BUTTON_ID='v3AdminAlbumsButton';
+  var PHOTO_PATCHED=false;
   var patched=false;
   function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
   function currentRows(){
@@ -31,7 +32,7 @@
   function ensureStyle(){
     if(document.getElementById(STYLE_ID)) return;
     var s=document.createElement('style');s.id=STYLE_ID;
-    s.textContent='.v3-admin-tools{display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap}.v3-admin-tools .btn{padding:8px 12px;font-size:12px;white-space:nowrap}@media(max-width:700px){.v3-admin-tools{gap:5px}.v3-admin-tools .btn{padding:7px 9px;font-size:11px}}';
+    s.textContent='.v3-admin-tools{display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap}.v3-admin-tools .btn{padding:8px 12px;font-size:12px;white-space:nowrap}@media(max-width:700px){.v3-admin-tools{gap:5px}.v3-admin-tools .btn{padding:7px 9px;font-size:11px}}.v3-photo-album-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.v3-photo-album-card{background:linear-gradient(135deg,#fffdf8,#fff4dc);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;min-height:220px}.v3-photo-album-card h3{font-size:27px;margin:0 0 8px}.v3-photo-album-card p{color:var(--muted);line-height:1.5;margin:0}.v3-photo-album-card .album-order{font-size:12px;color:var(--muted);margin-bottom:10px}.v3-photo-album-card .actions{margin-top:auto;padding-top:18px}.v3-photo-album-card .btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}@media(max-width:700px){.v3-photo-album-grid{grid-template-columns:1fr}.v3-photo-album-card{padding:20px}.v3-photo-album-card h3{font-size:24px}.v3-photo-album-card .btn{width:100%}}';
     document.head.appendChild(s);
   }
   function addAdminAlbumsButton(){
@@ -84,19 +85,41 @@
     html+=rows.map(function(m,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(m.full_name||m.preferred_name||'')+'</td><td>'+esc(m.detailed_address||'')+'</td><td>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '))+'</td><td>'+esc(m.mobile||m.whatsapp_phone||'')+'</td><td>'+esc(m.email||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>';
     w.document.open();w.document.write(html);w.document.close();
   }
+  async function renderPhotoAlbums(){
+    var app=document.getElementById('app');
+    if(!app)return;
+    ensureStyle();
+    app.innerHTML='<section class="card"><div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common photo albums.</div></div><div id="v3PhotoAlbumsLoading" class="notice">Loading photo albums…</div></section>';
+    var r=await window.__v3PhotoSupabase.from('reunion_photo_albums').select('id,title,description,url,sort_order,is_active').eq('is_active',true).order('sort_order').order('id');
+    if(r.error){app.innerHTML='<section class="card"><h2>Photos</h2><div class="notice error">'+esc(r.error.message)+'</div></section>';return;}
+    var rows=r.data||[];
+    if(!rows.length){app.innerHTML='<section class="card"><h2>Photos</h2><div class="stat">No photo albums are currently available.</div></section>';return;}
+    app.innerHTML='<section class="card"><div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common photo albums.</div></div><div class="v3-photo-album-grid">'+rows.map(function(a){return '<article class="v3-photo-album-card"><div class="album-order">Album '+esc(a.sort_order)+'</div><h3>'+esc(a.title||'Photo Album')+'</h3><p>'+esc(a.description||'')+'</p><div class="actions"><a class="btn" href="'+esc(a.url)+'" target="_blank" rel="noopener noreferrer">Open Photo Album →</a></div></article>';}).join('')+'</div></section>';
+  }
+  function patchPhotosPage(){
+    if(PHOTO_PATCHED||typeof window.photosPage!=='function')return;
+    if(!window.__v3PhotoSupabase&&window.supabase){
+      window.__v3PhotoSupabase=window.supabase.createClient('https://tizxolwmqrwvdheeqxrv.supabase.co','sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta');
+    }
+    if(!window.__v3PhotoSupabase)return;
+    window.photosPage=renderPhotoAlbums;
+    PHOTO_PATCHED=true;
+  }
   function patchNavigation(){
-    if(patched)return true;
-    if(typeof window.adminPage==='function'&&!window.adminPage.__v3Clean){
-      var originalAdminPage=window.adminPage;
-      var wrappedAdminPage=async function(){await originalAdminPage.apply(this,arguments);polishAdminLabels();addAdminAlbumsButton();addButtons();};
-      wrappedAdminPage.__v3Clean=true;window.adminPage=wrappedAdminPage;
+    if(!patched){
+      if(typeof window.adminPage==='function'&&!window.adminPage.__v3Clean){
+        var originalAdminPage=window.adminPage;
+        var wrappedAdminPage=async function(){await originalAdminPage.apply(this,arguments);polishAdminLabels();addAdminAlbumsButton();addButtons();};
+        wrappedAdminPage.__v3Clean=true;window.adminPage=wrappedAdminPage;
+      }
+      if(typeof window.adminAdd==='function'&&!window.adminAdd.__v3Clean){
+        var originalAdminAdd=window.adminAdd;
+        var wrappedAdminAdd=async function(){await originalAdminAdd.apply(this,arguments);removeBackToAdmin();};
+        wrappedAdminAdd.__v3Clean=true;window.adminAdd=wrappedAdminAdd;
+      }
+      patched=(typeof window.adminPage==='function'&&window.adminPage.__v3Clean)&&(typeof window.adminAdd==='function'&&window.adminAdd.__v3Clean);
     }
-    if(typeof window.adminAdd==='function'&&!window.adminAdd.__v3Clean){
-      var originalAdminAdd=window.adminAdd;
-      var wrappedAdminAdd=async function(){await originalAdminAdd.apply(this,arguments);removeBackToAdmin();};
-      wrappedAdminAdd.__v3Clean=true;window.adminAdd=wrappedAdminAdd;
-    }
-    patched=(typeof window.adminPage==='function'&&window.adminPage.__v3Clean)&&(typeof window.adminAdd==='function'&&window.adminAdd.__v3Clean);
+    patchPhotosPage();
     return patched;
   }
   function install(){patchNavigation();addAdminAlbumsButton();addButtons();polishAdminLabels();removeBackToAdmin();}
