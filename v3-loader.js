@@ -15,7 +15,14 @@
         add(d,'v3FixesLoader','/v3-fixes.js?v=20260914-6',function(){
           add(d,'v3FinalFixesLoader','/v3-final-fixes.js?v=20260914-3',function(){
             add(d,'v3LoginPatchLoader','/v3-login-patch.js?v=20260914-2',function(){
-              add(d,'v3UiPatchLoader','/v3-ui-patch.js?v=20260914-6',function(){});
+              add(d,'v3UiPatchLoader','/v3-ui-patch.js?v=20260914-6',function(){
+                var st=d.createElement('style');
+                st.id='v3AlbumSpacingFix';
+                st.textContent='.v3-album-admin-list{margin-top:4px!important}.v3-album-admin-list + *{} #v3AlbumFormHost{margin-top:0!important}';
+                (d.head||d.body).appendChild(st);
+                var btn=Array.from(d.querySelectorAll('button')).find(function(b){return b.textContent.trim()==='+ Add Album';});
+                if(btn){btn.style.transform='translateY(-12px)';btn.style.marginBottom='-4px';}
+              });
             });
           });
         });
