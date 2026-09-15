@@ -10,7 +10,7 @@
   function installStableAlbumPosition(d){
     if(!d||d.getElementById('v3StableAlbumPosition'))return;
     var s=d.createElement('style');s.id='v3StableAlbumPosition';
-    s.textContent='#v3AlbumFormHost{margin:0!important;padding:0!important;min-height:0!important;height:0!important;overflow:visible!important;}#v3AlbumFormHost + button.btn{margin-top:18px!important;margin-bottom:8px!important;transform:none!important;}';
+    s.textContent='#v3AlbumFormHost{margin:0!important;padding:0!important;min-height:0!important;height:0!important;overflow:visible!important;}#v3AlbumFormHost + button.btn{margin-top:-55px!important;margin-bottom:8px!important;transform:none!important;}';
     (d.head||d.documentElement).appendChild(s);
   }
   function inject(){
@@ -21,7 +21,7 @@
       if(!d||!d.body)return false;
       started=true;
       var adminLoad=(location.hash||'').toLowerCase()==='#admin';
-      if(adminLoad){d.documentElement.style.visibility='hidden';setTimeout(function(){revealAdmin(d);},5000);}
+      if(adminLoad)d.documentElement.style.visibility='hidden';
       add(d,'v3EnhancementsLoader','/v3-enhancements.js?v=20260915-8',function(){
         add(d,'v3FixesLoader','/v3-fixes.js?v=20260915-8',function(){
           add(d,'v3FinalFixesLoader','/v3-final-fixes.js?v=20260915-5',function(){
