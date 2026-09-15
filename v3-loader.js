@@ -10,7 +10,7 @@
   function installStableAlbumPosition(d){
     if(!d||d.getElementById('v3StableAlbumPosition'))return;
     var s=d.createElement('style');s.id='v3StableAlbumPosition';
-    s.textContent='#v3AlbumFormHost + button.btn{margin-top:30px!important;margin-bottom:8px!important;transform:none!important;}';
+    s.textContent='#v3AlbumFormHost{margin:0!important;padding:0!important;min-height:0!important;height:0!important;overflow:visible!important;}#v3AlbumFormHost + button.btn{margin-top:18px!important;margin-bottom:8px!important;transform:none!important;}';
     (d.head||d.documentElement).appendChild(s);
   }
   function inject(){
