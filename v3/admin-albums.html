@@ -4,28 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#c98616">
-<title>COEP ENTC 1983 — Admin Photo Albums</title>
+<title>COEP ENTC 1983 — Photo Albums</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--ink:#3e2919;--muted:#8d7862;--gold:#c98616;--cream:#fbf5e9;--paper:#fffdf8;--line:#dfcfb3}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,sans-serif}
-header{padding:12px 24px;border-bottom:1px solid var(--line);background:#fffaf1}.top{max-width:980px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:16px}
+header{padding:12px 24px;border-bottom:1px solid var(--line);background:#fffaf1}.top{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:16px}
 h1,h2,h3{font-family:Georgia,serif;margin:0}h1{font-size:30px}.tag{letter-spacing:3px;color:#b77918;font-weight:700;font-size:12px;margin-top:3px}
-.nav{display:flex;gap:8px;align-items:center}.nav a{border:0;background:transparent;color:var(--ink);font-weight:700;padding:10px;text-decoration:none}.nav a.active{background:var(--gold);color:white;border-radius:12px}
+.nav{display:flex;gap:8px;align-items:center}.nav a,.nav button{border:0;background:transparent;color:var(--ink);font-weight:700;padding:10px;text-decoration:none;cursor:pointer}.nav a.active{background:var(--gold);color:white;border-radius:12px}.nav .signout{color:#9b2525}
+.signedin{display:flex;align-items:center;gap:7px;padding:0 5px;color:var(--ink);font-size:12px;font-weight:700;white-space:nowrap}
 .container{max-width:980px;margin:auto;padding:24px 20px 50px}.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:26px;margin-bottom:20px;box-shadow:0 5px 20px #5c3b1710}
 .page-head{display:flex;justify-content:space-between;align-items:center;gap:16px}.page-head p{margin:7px 0 0;color:var(--muted)}
 .btn{border:0;border-radius:13px;padding:12px 18px;font-weight:700;cursor:pointer;background:var(--gold);color:white}.btn.secondary{background:white;color:var(--ink);border:1px solid var(--line)}.btn.danger{background:white;color:#b44;border:1px solid #efb5b5}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.notice{padding:13px 15px;border-radius:12px;background:#fff3c9;margin-top:14px}.error{background:#ffe5e5;color:#9b2525}.small{font-size:13px;color:var(--muted)}
 .album-list{display:grid;gap:12px;margin-top:18px}.album{border:1px solid var(--line);border-radius:16px;background:#fffaf1;padding:16px}.album-main{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.album h3{font-size:21px}.album p{margin:6px 0;color:var(--muted);line-height:1.45}.meta{font-size:12px;color:var(--muted);margin-top:7px}.meta a{color:#9b6510;overflow-wrap:anywhere}.album-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex:none}.status{display:inline-block;padding:4px 8px;border-radius:9px;font-size:11px;font-weight:700;background:#e9f2df;color:#5d7b3d}.status.off{background:#eee8df;color:#806d59}
 .form-card{margin-top:18px;border-top:1px solid var(--line);padding-top:22px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}label{display:block;font-weight:700;color:#806d59;font-size:13px;letter-spacing:1px;margin-bottom:7px;text-transform:uppercase}input,textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:#fffaf1;color:var(--ink);font-size:16px}textarea{min-height:100px;resize:vertical}.full{grid-column:1/-1}.check{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--ink)}.check input{width:auto}
-@media(max-width:700px){header{padding:10px 16px}.top{align-items:flex-start;flex-direction:column}.nav{width:100%;gap:3px}.nav a{flex:1;text-align:center;padding:8px 5px;font-size:12px}.container{padding:18px 14px 40px}.card{padding:20px}.page-head{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.full{grid-column:auto}.album-main{flex-direction:column}.album-actions{justify-content:flex-start}.album-actions .btn{padding:9px 12px;font-size:12px}}
+@media(max-width:900px){.top{align-items:flex-start;flex-direction:column}.nav{width:100%;gap:3px}.nav a,.nav button{flex:1;text-align:center;padding:8px 5px;font-size:12px}.signedin{display:none}}
+@media(max-width:700px){header{padding:10px 16px}.container{padding:18px 14px 40px}.card{padding:20px}.page-head{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.full{grid-column:auto}.album-main{flex-direction:column}.album-actions{justify-content:flex-start}.album-actions .btn{padding:9px 12px;font-size:12px}}
 </style>
 </head>
 <body>
-<header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><nav class="nav"><a href="/v3/#home">Home</a><a href="/v3/#photos">Photos</a><a href="/v3/#admin" class="active">Admin</a></nav></div></header>
+<header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><nav class="nav"><a href="/v3/#home">Home</a><a href="/v3/#directory">Classmates</a><a href="/v3/#photos">Photos</a><a href="/v3/#profile">My Profile</a><a href="/v3/#admin" class="active">Admin</a><span class="signedin" id="signedInName"></span><button class="signout" id="signOutBtn" type="button">Sign out</button></nav></div></header>
 <main class="container"><section class="card">
-<div class="page-head"><div><h2>Admin Photo Albums</h2><p>Manage the shared photo albums shown on the Reunion Photos page.</p></div><button class="btn" id="newBtn" type="button">+ New Album</button></div>
-<div id="status"></div><div id="form" class="form-card" hidden>
+<div class="page-head"><div><h2>Photo Albums</h2><p>Manage the shared photo albums shown on the Reunion Photos page.</p></div><button class="btn" id="newBtn" type="button">+ New Album</button></div>
+<div id="status"></div>
+<div id="form" class="form-card" hidden>
 <h3 id="formTitle">New Album</h3>
 <div class="grid" style="margin-top:16px">
 <div><label for="title">Album title</label><input id="title" maxlength="120"></div>
@@ -33,7 +36,7 @@ h1,h2,h3{font-family:Georgia,serif;margin:0}h1{font-size:30px}.tag{letter-spacin
 <div class="full"><label for="url">Album link</label><input id="url" type="url" placeholder="https://photos.app.goo.gl/... or Google Drive link"></div>
 <div class="full"><label for="description">Description</label><textarea id="description" maxlength="500"></textarea></div>
 <div class="full"><label class="check"><input id="active" type="checkbox" checked> Active — show this album on Photos</label></div>
-</div><div class="actions"><button class="btn" id="saveBtn" type="button">Save Album</button><button class="btn secondary" id="cancelBtn" type="button">Cancel</button></div>
+</div><div class="actions"><button class="btn" id="saveBtn" type="button">Save Album</button><button class="btn secondary" id="cancelBtn" type="button">Back to Album List</button></div>
 </div>
 <div id="albums" class="album-list"></div>
 </section></main>
@@ -46,8 +49,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:t
 const $=id=>document.getElementById(id);let albums=[];let editingId=null;
 function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
 function show(msg,error=false){$('status').innerHTML=msg?'<div class="notice '+(error?'error':'')+'">'+esc(msg)+'</div>':'';}
-function closeForm(){$('form').hidden=true;editingId=null;}
-function openForm(album){editingId=album?album.id:null;$('formTitle').textContent=album?'Edit Album':'New Album';$('title').value=album?.title||'';$('description').value=album?.description||'';$('url').value=album?.url||'';$('sort').value=album?.sort_order||Math.max(1,...albums.map(a=>Number(a.sort_order)||0),0)+1;$('active').checked=album?album.is_active!==false:true;$('form').hidden=false;$('title').focus();}
+function closeForm(){$('form').hidden=true;editingId=null;$('albums').hidden=false;}
+function openForm(album){editingId=album?album.id:null;$('formTitle').textContent=album?'Edit Album':'New Album';$('title').value=album?.title||'';$('description').value=album?.description||'';$('url').value=album?.url||'';$('sort').value=album?.sort_order||Math.max(1,...albums.map(a=>Number(a.sort_order)||0),0)+1;$('active').checked=album?album.is_active!==false:true;$('form').hidden=false;$('albums').hidden=true;show('');$('title').focus();}
 function render(){
  if(!albums.length){$('albums').innerHTML='<p class="small">No photo albums found.</p>';return;}
  $('albums').innerHTML=albums.map(a=>'<article class="album"><div class="album-main"><div><h3>'+esc(a.title||'Untitled')+'</h3><span class="status '+(a.is_active?'':'off')+'">'+(a.is_active?'Active':'Hidden')+'</span><div class="meta">Order '+esc(a.sort_order)+' · <a href="'+esc(a.url||'#')+'" target="_blank" rel="noopener">'+esc(a.url||'No link')+'</a></div><p>'+esc(a.description||'')+'</p></div><div class="album-actions"><button class="btn secondary" data-edit="'+a.id+'">Edit</button><button class="btn danger" data-delete="'+a.id+'">Delete</button></div></div></article>').join('');
@@ -63,6 +66,7 @@ async function load(){
  const r=await sb.from('reunion_photo_albums').select('*').order('sort_order').order('id');
  if(r.error){show(r.error.message,true);return;}
  albums=r.data||[];render();
+ try{const u=await sb.from('reunion_members').select('preferred_name,full_name').eq('auth_user_id',session.user.id).maybeSingle();const name=u.data?.preferred_name||u.data?.full_name||session.user.email?.split('@')[0]||'Admin';$('signedInName').textContent=name;}catch(e){}
 }
 async function save(){
  const title=$('title').value.trim(),url=$('url').value.trim(),description=$('description').value.trim(),sort=Math.max(1,parseInt($('sort').value||'1',10)||1),active=$('active').checked;
@@ -82,7 +86,7 @@ async function removeAlbum(id){
  show('Deleting…');const r=await sb.rpc('reunion_photo_album_delete',{p_id:id});
  if(r.error){show(r.error.message,true);return;}await load();show('Album deleted.');setTimeout(()=>show(''),1800);
 }
-$('newBtn').onclick=()=>openForm(null);$('cancelBtn').onclick=closeForm;$('saveBtn').onclick=save;load();
+$('newBtn').onclick=()=>openForm(null);$('cancelBtn').onclick=closeForm;$('saveBtn').onclick=save;$('signOutBtn').onclick=async()=>{await sb.auth.signOut();location.replace('/v3/#home')};load();
 })();
 </script>
 </body></html>
