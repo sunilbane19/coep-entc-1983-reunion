@@ -26,6 +26,7 @@
       var d=f.contentDocument;
       if(!d||!d.body)return false;
       started=true;
+      moveAddAlbum(d);
       var adminLoad=(location.hash||'').toLowerCase()==='#admin';
       if(adminLoad){d.documentElement.style.visibility='hidden';setTimeout(function(){revealAdmin(d);},5000);}
       add(d,'v3EnhancementsLoader','/v3-enhancements.js?v=20260914-6',function(){
@@ -37,7 +38,6 @@
                 st.id='v3AlbumSpacingFix';
                 st.textContent='.v3-album-admin-list{margin-top:0!important}#v3AlbumFormHost{margin-top:0!important}';
                 (d.head||d.body).appendChild(st);
-                moveAddAlbum(d);
                 revealAdmin(d);
               });
             });
