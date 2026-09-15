@@ -22,7 +22,13 @@
       try{localStorage.setItem('v3_auth_complete',String(Date.now()));}catch(e){}
       try{window.opener&&window.opener.postMessage({type:'v3_auth_complete',returnHash:'#home'},location.origin);}catch(e){}
       try{window.close();}catch(e){}
-      setTimeout(function(){try{window.focus();}catch(e){}location.replace('/v3.html#home');},700);
+      // If the browser refuses to close this tab, keep a safe fallback so
+      // the authentication callback is never left stranded.
+      setTimeout(function(){
+        try{if(window.closed)return;}catch(e){}
+        try{window.focus();}catch(e){}
+        location.replace('/v3/#home');
+      },1200);
     }
     const p=new URLSearchParams(location.search);
     const code=p.get('code');
