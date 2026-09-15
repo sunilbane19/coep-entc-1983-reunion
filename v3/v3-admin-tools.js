@@ -13,6 +13,21 @@
     if(f==='admins') rows=rows.filter(function(m){return (window.adminRoles||{})[m.id]==='admin';});
     return rows;
   }
+  function polishAdminLabels(){
+    var complete=document.getElementById('filterComplete');
+    var pending=document.getElementById('filterPending');
+    if(complete) complete.textContent='✓ Done '+(window.adminMembers||[]).filter(function(m){return !!m.profile_completed;}).length;
+    if(pending) pending.textContent='○ Not Done '+(window.adminMembers||[]).filter(function(m){return !m.profile_completed;}).length;
+  }
+  function removeBackToAdmin(){
+    var app=document.getElementById('app');
+    if(!app) return;
+    var h=Array.from(app.querySelectorAll('h1,h2,h3')).find(function(x){return x.textContent.trim()==='Add New Member';});
+    if(!h) return;
+    Array.from(app.querySelectorAll('button,a')).forEach(function(el){
+      if(el.textContent.trim()==='Back to Admin') el.remove();
+    });
+  }
   function ensureStyle(){
     if(document.getElementById(STYLE_ID)) return;
     var s=document.createElement('style');s.id=STYLE_ID;
@@ -54,12 +69,12 @@
   function printList(){
     var rows=currentRows();var q=document.getElementById('adminQ')?.value||'';var f=window.adminFilter||'all';
     var w=window.open('','_blank','width=1100,height=800');if(!w){alert('Please allow pop-ups for the reunion site to print.');return;}
-    var html='<!doctype html><html><head><title>COEP ENTC 1983 — Class Reunion</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#222;font-size:11px}h1{font-family:Georgia,serif;margin:0 0 4px;font-size:20px}p{margin:0 0 12px;color:#666}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px 7px;vertical-align:top;text-align:left}th{background:#f3ead9;font-weight:700}th:nth-child(1),td:nth-child(1){width:6%}th:nth-child(2),td:nth-child(2){width:20%}th:nth-child(3),td:nth-child(3){width:29%}th:nth-child(4),td:nth-child(4){width:18%}th:nth-child(5),td:nth-child(5){width:13%}th:nth-child(6),td:nth-child(6){width:20%}.toolbar{display:flex;gap:8px;margin-bottom:14px}.toolbar button{padding:7px 12px}@media print{.toolbar{display:none}}</style></head><body><div class="toolbar"><button onclick="window.print()">Print</button><button onclick="window.close()">Exit</button></div><h1>COEP ENTC 1983 — Class Reunion</h1><p>'+esc(new Date().toLocaleDateString('en-IN'))+' • Filter: '+esc(f)+(q?' • Search: '+esc(q):'')+' • '+rows.length+' record'+(rows.length===1?'':'s')+'</p><table><thead><tr><th>S.N.</th><th>Name</th><th>Address</th><th>Town / City</th><th>Phone No.</th><th>Email</th></tr></thead><tbody>';
+    var html='<!doctype html><html><head><title>COEP ENTC 1983 — Class Reunion</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;color:#222;font-size:11px}h1{font-family:Georgia,serif;margin:0 0 4px;font-size:20px}p{margin:0 0 12px;color:#666}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px 7px;vertical-align:top;text-align:left}th{background:#f3ead9;font-weight:700}th:nth-child(1),td:nth-child(1){width:6%}th:nth-child(2),td:nth-child(2){width:20%}th:nth-child(3),td:nth-child(3){width:29%}th:nth-child(4),td:nth-child(4){width:18%}th:nth-child(5),td:nth-child(5){width:13%}th:nth-child(6),td:nth-child(6){width:20%}.toolbar{display:flex;gap:8px;margin-bottom:14px}.toolbar button{padding:7px 12px}@media print{.toolbar{display:none}}</style></head><body><div class=\"toolbar\"><button onclick=\"window.print()\">Print</button><button onclick=\"window.close()\">Exit</button></div><h1>COEP ENTC 1983 — Class Reunion</h1><p>'+esc(new Date().toLocaleDateString('en-IN'))+' • Filter: '+esc(f)+(q?' • Search: '+esc(q):'')+' • '+rows.length+' record'+(rows.length===1?'':'s')+'</p><table><thead><tr><th>S.N.</th><th>Name</th><th>Address</th><th>Town / City</th><th>Phone No.</th><th>Email</th></tr></thead><tbody>';
     html+=rows.map(function(m,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(m.full_name||m.preferred_name||'')+'</td><td>'+esc(m.detailed_address||'')+'</td><td>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '))+'</td><td>'+esc(m.mobile||m.whatsapp_phone||'')+'</td><td>'+esc(m.email||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>';
     w.document.open();w.document.write(html);w.document.close();
   }
-  function install(){addButtons();}
+  function install(){addButtons();polishAdminLabels();removeBackToAdmin();}
   var n=0,t=setInterval(function(){install();if(++n>40)clearInterval(t);},250);install();
   document.addEventListener('input',function(e){if(e.target&&e.target.id==='adminQ')setTimeout(addButtons,0);});
-  var mo=new MutationObserver(function(){addButtons();});mo.observe(document.body,{childList:true,subtree:true});
+  var mo=new MutationObserver(function(){install();});mo.observe(document.body,{childList:true,subtree:true});
 })();
