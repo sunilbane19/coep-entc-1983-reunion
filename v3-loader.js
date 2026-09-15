@@ -7,7 +7,7 @@
   function moveAddAlbum(d){
     function apply(){
       var btn=Array.from(d.querySelectorAll('button')).find(function(b){return b.textContent.trim()==='+ Add Album';});
-      if(btn){btn.style.transform='translateY(-70px)';btn.style.marginBottom='-62px';}
+      if(btn){btn.style.transform='translateY(-20px)';btn.style.marginBottom='20px';}
     }
     apply();
     if(!d.__v3AlbumObserver && d.body){
