@@ -4,6 +4,18 @@
     if(d.getElementById(id)){next();return;}
     var s=d.createElement('script');s.id=id;s.src=src;s.async=false;s.onload=next;s.onerror=function(){setTimeout(next,250);};(d.body||d.documentElement).appendChild(s);
   }
+  function moveAddAlbum(d){
+    function apply(){
+      var btn=Array.from(d.querySelectorAll('button')).find(function(b){return b.textContent.trim()==='+ Add Album';});
+      if(btn){btn.style.transform='translateY(-55px)';btn.style.marginBottom='-47px';}
+    }
+    apply();
+    if(!d.__v3AlbumObserver && d.body){
+      var mo=new MutationObserver(apply);
+      mo.observe(d.body,{childList:true,subtree:true});
+      d.__v3AlbumObserver=mo;
+    }
+  }
   function inject(){
     var f=document.getElementById('app');
     if(!f||started)return !!started;
@@ -18,10 +30,9 @@
               add(d,'v3UiPatchLoader','/v3-ui-patch.js?v=20260914-6',function(){
                 var st=d.createElement('style');
                 st.id='v3AlbumSpacingFix';
-                st.textContent='.v3-album-admin-list{margin-top:4px!important}.v3-album-admin-list + *{} #v3AlbumFormHost{margin-top:0!important}';
+                st.textContent='.v3-album-admin-list{margin-top:0!important}#v3AlbumFormHost{margin-top:0!important}';
                 (d.head||d.body).appendChild(st);
-                var btn=Array.from(d.querySelectorAll('button')).find(function(b){return b.textContent.trim()==='+ Add Album';});
-                if(btn){btn.style.transform='translateY(-12px)';btn.style.marginBottom='-4px';}
+                moveAddAlbum(d);
               });
             });
           });
