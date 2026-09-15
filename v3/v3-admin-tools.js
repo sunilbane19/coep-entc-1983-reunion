@@ -89,4 +89,20 @@
   }
   function install(){patchNavigation();addButtons();polishAdminLabels();removeBackToAdmin();}
   var n=0,t=setInterval(function(){install();if(++n>40)clearInterval(t);},250);install();
+
+  // If the magic link opens in a second tab, the original V3 sign-in tab
+  // follows the completed authentication and becomes Home automatically.
+  function syncOriginalAuthTab(){
+    try{
+      var path=location.pathname;
+      if(path!=='/v3/'&&path!=='/v3/index.html')return;
+      if(location.hash==='#home'||location.hash==='#admin')return;
+      var marker=localStorage.getItem('v3_auth_complete');
+      if(marker&&Date.now()-Number(marker)<120000)location.replace('/v3/#home');
+    }catch(e){}
+  }
+  window.addEventListener('storage',function(e){
+    if(e.key==='v3_auth_complete'&&e.newValue)syncOriginalAuthTab();
+  });
+  syncOriginalAuthTab();
 })();
