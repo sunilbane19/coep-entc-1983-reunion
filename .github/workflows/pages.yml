@@ -37,9 +37,6 @@ jobs:
           new = 'Class Updates</button><button class="btn secondary" onclick="location.href=&quot;/v3/admin-albums.html&quot;">Photo Albums</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
           if old in s and 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"' not in s:
               s = s.replace(old, new, 1)
-          # Put Export/Print into the core Admin markup itself. This is the same
-          # working export/print implementation, but avoids depending on a
-          # MutationObserver timing race after adminPage() replaces #app.
           tools = '<div id="v3AdminToolsButtons" class="v3-admin-tools"><button class="btn" type="button" onclick="window.v3AdminExport && window.v3AdminExport()">Export</button><button class="btn secondary" type="button" onclick="window.v3AdminPrint && window.v3AdminPrint()">Print</button></div>'
           marker = '<div id="adminList" class="admin-list"></div>'
           if marker in s and 'id="v3AdminToolsButtons"' not in s:
@@ -114,3 +111,5 @@ jobs:
             git commit -m "Deploy V3 source from main [skip ci]"
             git push origin HEAD:gh-pages
           fi
+
+          # Deployment trigger: keep the custom V3 deployment workflow active.
