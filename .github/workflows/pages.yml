@@ -27,6 +27,22 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Ensure V3 admin enhancements are loaded
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('v3/index.html')
+          s = p.read_text(encoding='utf-8')
+          tag = '<script src="./v3-admin-tools.js"></script>'
+          if tag not in s:
+              marker = '</head>'
+              if marker not in s:
+                  raise SystemExit('Could not find </head> in v3/index.html')
+              s = s.replace(marker, tag + marker, 1)
+              p.write_text(s, encoding='utf-8')
+          print('V3 admin tools script present in deployment artifact')
+          PY
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
