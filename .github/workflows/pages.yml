@@ -75,13 +75,29 @@ jobs:
               print('Patched V3 source')
           PY
 
+          # The Admin Export/Print controls live in the external tools file.
+          # The original implementation assumed a .admin-filters wrapper;
+          # current core Admin markup may not provide that class. Make the
+          # insertion point robust by falling back to the Admin search field.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('v3/v3-admin-tools.js')
+          s = p.read_text(encoding='utf-8')
+          old = "function addExport(){var f=document.querySelector('.admin-filters');if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;"
+          new = "function addExport(){var f=document.querySelector('.admin-filters'),q=document.getElementById('adminQ');if(!f&&q)f=q.parentElement;if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;"
+          if old not in s:
+              raise SystemExit('Could not locate Admin Export/Print function')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          print('Patched Admin Export/Print insertion point')
+          PY
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add v3/index.html
+          git add v3/index.html v3/v3-admin-tools.js
           if git diff --cached --quiet; then
             echo "Main V3 source already current"
           else
-            git commit -m "V3: make Photos renderer database-driven [skip ci]"
+            git commit -m "V3: make Admin Export and Print controls robust [skip ci]"
             git push origin HEAD:main
           fi
 
