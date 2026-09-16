@@ -20,4 +20,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.addEventListener('load',function(){boot()});
 window.v3AdminExport=exportExcel;
 window.v3AdminPrint=printList;
+window.v3AdminExport=exportExcel;window.v3AdminPrint=printList;
 })();
