@@ -37,6 +37,13 @@ jobs:
           new = 'Class Updates</button><button class="btn secondary" onclick="location.href=&quot;/v3/admin-albums.html&quot;">Photo Albums</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
           if old in s and 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"' not in s:
               s = s.replace(old, new, 1)
+          # Put Export/Print into the core Admin markup itself. This is the same
+          # working export/print implementation, but avoids depending on a
+          # MutationObserver timing race after adminPage() replaces #app.
+          tools = '<div id="v3AdminToolsButtons" class="v3-admin-tools"><button class="btn" type="button" onclick="window.v3AdminExport && window.v3AdminExport()">Export</button><button class="btn secondary" type="button" onclick="window.v3AdminPrint && window.v3AdminPrint()">Print</button></div>'
+          marker = '<div id="adminList" class="admin-list"></div>'
+          if marker in s and 'id="v3AdminToolsButtons"' not in s:
+              s = s.replace(marker, tools + marker, 1)
           photos = r'''const GOOGLE_PHOTOS_URL="https://photos.app.goo.gl/RN9Ttn1H7SMMt8CL6";
           async function photosPage(){
             const app=$("app");
@@ -73,8 +80,10 @@ jobs:
           end = s.find('function noBack(){', start)
           if start < 0 or end < 0:
               raise SystemExit('Could not locate Admin Export/Print function boundaries')
-          replacement = "function addExport(){var q=document.getElementById('adminQ'),f=document.querySelector('.admin-filters');if(!f&&q)f=q.closest('.admin-toolbar')||q.parentElement;if(!f||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);f.insertAdjacentElement('afterend',w)}"
+          replacement = "function addExport(){var existing=document.getElementById(BUTTONS_ID);if(existing)return;var list=document.getElementById('adminList');var filters=document.querySelector('.admin-filters');var q=document.getElementById('adminQ');if(!list&&!filters&&!q)return;var anchor=list||filters||q;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);if(list)list.parentNode.insertBefore(w,list);else if(filters)filters.insertAdjacentElement('afterend',w);else q.parentElement.appendChild(w)}"
           s = s[:start] + replacement + s[end:]
+          if 'window.v3AdminExport=exportExcel;window.v3AdminPrint=printList;' not in s:
+              s = s.replace('\n})();', '\nwindow.v3AdminExport=exportExcel;window.v3AdminPrint=printList;\n})();')
           p.write_text(s, encoding='utf-8')
           print('Patched Admin Export/Print insertion point')
           PY
