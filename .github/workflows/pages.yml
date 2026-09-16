@@ -70,19 +70,20 @@ jobs:
               print('Patched V3 source')
           PY
 
-          # Patch the external Admin tools function by structure rather than
-          # by an exact string, so small prior changes cannot break deployment.
+          # Patch Admin Export/Print without depending on the exact minified
+          # text of the existing function. Locate the function boundaries by
+          # their stable names and replace the complete function body.
           python3 - <<'PY'
-          import re
           from pathlib import Path
           p = Path('v3/v3-admin-tools.js')
           s = p.read_text(encoding='utf-8')
-          replacement = "function addExport(){var q=document.getElementById('adminQ'),f=document.querySelector('.admin-filters');if(!f&&q)f=q.closest('.admin-toolbar')||q.parentElement;if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);f.insertAdjacentElement('afterend',w)}function noBack()"
-          pattern = r'function addExport\(\)\{.*?\}function noBack\(\)'
-          s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
-          if n != 1:
-              raise SystemExit('Could not locate Admin Export/Print function')
-          p.write_text(s2, encoding='utf-8')
+          start = s.find('function addExport(){')
+          end = s.find('function noBack(){', start)
+          if start < 0 or end < 0:
+              raise SystemExit('Could not locate Admin Export/Print function boundaries')
+          replacement = "function addExport(){var q=document.getElementById('adminQ'),f=document.querySelector('.admin-filters');if(!f&&q)f=q.closest('.admin-toolbar')||q.parentElement;if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);f.insertAdjacentElement('afterend',w)}"
+          s = s[:start] + replacement + s[end:]
+          p.write_text(s, encoding='utf-8')
           print('Patched Admin Export/Print insertion point')
           PY
 
