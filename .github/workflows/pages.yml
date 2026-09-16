@@ -21,7 +21,7 @@ jobs:
 
       - name: Patch V3 source and cache-bust
         env:
-          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_SHA: ${{ github.run_id }}
         run: |
           python3 - <<'PY'
           import os, re
