@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -16,30 +14,32 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Sync V3 loader to gh-pages with a fresh cache key
+      - name: Refresh V3 admin tools cache key on gh-pages
         env:
           DEPLOY_SHA: ${{ github.sha }}
         run: |
           git fetch origin gh-pages
-          git checkout origin/gh-pages -- v3/index.html
+          git switch --detach origin/gh-pages
           python3 - <<'PY'
           import os, re
           from pathlib import Path
           p = Path('v3/index.html')
           s = p.read_text(encoding='utf-8')
-          pattern = r'(/v3/v3-admin-tools\.js\?v=)[^\"\']*'
-          s2, n = re.subn(pattern, r'\g<1>' + os.environ['DEPLOY_SHA'], s, count=1)
-          if n != 1:
-              raise SystemExit('Could not find the V3 admin tools loader in gh-pages/v3/index.html')
+          pattern = r'(<script\s+src=["\'](?:\./|/v3/)?v3-admin-tools\.js\?v=)[^"\']*(["\'])'
+          s2, n = re.subn(pattern, r'\g<1>' + os.environ['DEPLOY_SHA'] + r'\2', s, count=1)
+          if n == 0:
+              marker = '</head>'
+              tag = f'<script src="./v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script>'
+              if marker not in s:
+                  raise SystemExit('Could not find </head> in gh-pages/v3/index.html')
+              s2 = s.replace(marker, tag + marker, 1)
           p.write_text(s2, encoding='utf-8')
+          print('V3 admin tools loader refreshed:', os.environ['DEPLOY_SHA'])
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -50,35 +50,3 @@ jobs:
             git commit -m "V3: refresh admin tools asset URL [deploy]"
             git push origin HEAD:gh-pages
           fi
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Ensure V3 admin enhancements are loaded
-        env:
-          DEPLOY_SHA: ${{ github.sha }}
-        run: |
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-          p = Path('v3/index.html')
-          s = p.read_text(encoding='utf-8')
-          prefix = '<script src="./v3-admin-tools.js'
-          if prefix not in s:
-              tag = f'<script src="./v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script>'
-              marker = '</head>'
-              if marker not in s:
-                  raise SystemExit('Could not find </head> in v3/index.html')
-              s = s.replace(marker, tag + marker, 1)
-              p.write_text(s, encoding='utf-8')
-          print('V3 admin tools script present in deployment artifact')
-          PY
-
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-
-      - name: Deploy to Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
