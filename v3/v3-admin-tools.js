@@ -16,7 +16,7 @@ async function photoPage(){var app=document.getElementById('app');if(!app)return
 function patchPhoto(){if(PHOTO_PATCHED||!window.supabase)return;if(!window.__v3PhotoSupabase)window.__v3PhotoSupabase=window.supabase.createClient('https://tizxolwmqrwvdheeqxrv.supabase.co','sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta');window.photosPage=photoPage;PHOTO_PATCHED=true}
 function patch(){try{style();patchNav();header();labels();adminActions();addExport();noBack();patchPhoto();window.__v3AdminToolsLoaded=true}catch(e){window.__v3AdminToolsError=String(e&&e.stack||e)}}
 function observe(){if(OBSERVED||!document.body)return;var observer=new MutationObserver(function(){patch()});observer.observe(document.body,{childList:true,subtree:true});OBSERVED=true}
-function boot(){patch();observe();setTimeout(function(){patch();observe()},50);setTimeout(function(){patch();observe()},500);setTimeout(function(){patch();observe()},1500)}
+function boot(){patch();observe();if(location.hash==='#photos')setTimeout(photoPage,0);setTimeout(function(){patch();observe();if(location.hash==='#photos')photoPage()},50);setTimeout(function(){patch();observe()},500);setTimeout(function(){patch();observe()},1500)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 window.addEventListener('load',function(){boot()});
 window.addEventListener('hashchange',function(){setTimeout(function(){patch();if(location.hash==='#photos')photoPage()},50)});
