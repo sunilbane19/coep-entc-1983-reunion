@@ -1,4 +1,4 @@
-const NEW_ASSET='/v3/v3-admin-tools-20260916-9.js';
+const NEW_ASSET='/v3/v3-admin-tools-abd5f84.js';
 self.addEventListener('install',event=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',event=>{
