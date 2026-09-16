@@ -19,6 +19,51 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Patch V3 Admin UI on main deployment source
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('v3/index.html')
+          s = p.read_text(encoding='utf-8')
+          before = s
+
+          # The live site has been serving the main branch's V3 renderer.
+          # Patch the renderer itself so the Admin UI does not depend on a
+          # post-render enhancement script.
+          s = s.replace('+ Add New Member', '+ Add Member')
+          s = s.replace('✓ Complete '+"'", '✓ Done '+"'")
+          s = s.replace('○ Not completed '+"'", '○ Not Done '+"'")
+
+          old = 'Class Updates</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
+          new = 'Class Updates</button><button class="btn secondary" onclick="location.href=\'/v3/admin-albums.html\'">Photo Albums</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
+          if old in s and 'onclick="location.href=\'/v3/admin-albums.html\'"' not in s:
+              s = s.replace(old, new, 1)
+
+          # Ensure the enhanced Admin tools (Export / Print / photo album
+          # navigation) is loaded when main is the Pages source.
+          if 'v3-admin-tools.js' not in s:
+              tag = f'<script src="/v3/v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script>'
+              s = s.replace('</body>', tag + '</body>', 1)
+
+          if s == before:
+              print('Main V3 Admin source already patched')
+          else:
+              p.write_text(s, encoding='utf-8')
+              print('Patched main v3/index.html')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add v3/index.html
+          if git diff --cached --quiet; then
+            echo "Main V3 Admin source already current"
+          else
+            git commit -m "V3: patch Admin UI on main source [skip ci]"
+            git push origin HEAD:main
+          fi
+
       - name: Refresh V3 admin tools cache key on gh-pages
         env:
           DEPLOY_SHA: ${{ github.sha }}
