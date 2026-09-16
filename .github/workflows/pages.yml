@@ -19,20 +19,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Patch V3 Admin UI on main deployment source
+      - name: Patch V3 source and cache-bust
         env:
           DEPLOY_SHA: ${{ github.sha }}
         run: |
           python3 - <<'PY'
-          import os
+          import os, re
           from pathlib import Path
           p = Path('v3/index.html')
           s = p.read_text(encoding='utf-8')
           before = s
 
-          # Patch the core renderer itself. Keep the album URL HTML-encoded
-          # because adminPage() builds its markup inside a single-quoted JS
-          # string; raw single quotes here would break the entire application.
+          # Admin UI wording/actions. The encoded quotes are intentional:
+          # adminPage() builds its markup inside a JS string.
           s = s.replace('+ Add New Member', '+ Add Member')
           s = s.replace('✓ Complete '+"'", '✓ Done '+"'")
           s = s.replace('○ Not completed '+"'", '○ Not Done '+"'")
@@ -43,81 +42,61 @@ jobs:
           if old in s and 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"' not in s:
               s = s.replace(old, new, 1)
 
-          # Ensure the enhanced Admin tools script is loaded when main is the
-          # Pages source.
-          if 'v3-admin-tools.js' not in s:
-              tag = f'<script src="/v3/v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script>'
-              s = s.replace('</body>', tag + '</body>', 1)
+          # Core Photos renderer: make the page itself database-driven rather
+          # than relying on an external monkey-patch. This means direct entry
+          # at /v3/#photos and normal in-app navigation use the same renderer.
+          photos = r'''const GOOGLE_PHOTOS_URL="https://photos.app.goo.gl/RN9Ttn1H7SMMt8CL6";
+          async function photosPage(){
+            const app=$("app");
+            if(!app)return;
+            app.innerHTML='<section class="card"><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common photo albums.</div><div class="notice">Loading photo albums…</div></section>';
+            const r=await sb.from("reunion_photo_albums").select("id,title,description,url,sort_order,is_active").eq("is_active",true).order("sort_order").order("id");
+            if(r.error){app.innerHTML='<section class="card"><h2>Photos</h2><div class="notice error">'+esc(r.error.message)+'</div></section>';return}
+            const albums=r.data||[];
+            app.innerHTML='<section class="card"><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common photo albums.</div><div class="photos-landing" style="grid-template-columns:1fr"><div class="v3-photo-album-grid">'+albums.map(x=>'<article class="v3-photo-album-card"><div class="album-order">Album '+esc(x.sort_order)+'</div><h3>'+esc(x.title||"Photo Album")+'</h3><p>'+esc(x.description||"")+'</p><div class="actions"><a class="btn photos-open-btn" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">Open Photo Album <span aria-hidden="true">→</span></a></div></article>').join("")+'</div></div></section>';
+          }
+          async function start(){'''
+          pattern = r'const GOOGLE_PHOTOS_URL=.*?\nasync function start\(\)\{'
+          s, n = re.subn(pattern, photos, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('Could not locate the core Photos renderer')
+
+          # Ensure the external tools file has a cache-busted URL.
+          pattern2 = r'(<script\s+src=["\'](?:\./|/v3/)?v3-admin-tools\.js\?v=)[^"\']*(["\'])'
+          s, n2 = re.subn(pattern2, r'\g<1>' + os.environ['DEPLOY_SHA'] + r'\2', s, count=1)
+          if n2 == 0:
+              s = s.replace('</body>', f'<script src="/v3/v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script></body>', 1)
 
           if s == before:
-              print('Main V3 Admin source already patched')
+              print('No V3 source changes needed')
           else:
               p.write_text(s, encoding='utf-8')
-              print('Patched main v3/index.html')
+              print('Patched V3 source')
           PY
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add v3/index.html
           if git diff --cached --quiet; then
-            echo "Main V3 Admin source already current"
+            echo "Main V3 source already current"
           else
-            git commit -m "V3: fix Admin renderer syntax [skip ci]"
+            git commit -m "V3: make Photos renderer database-driven [skip ci]"
             git push origin HEAD:main
           fi
 
-      - name: Refresh V3 admin tools cache key on gh-pages
-        env:
-          DEPLOY_SHA: ${{ github.sha }}
+      - name: Deploy exact V3 source to gh-pages
         run: |
-          git fetch origin gh-pages
-          git switch --detach origin/gh-pages
-          python3 - <<'PY'
-          import os, re
-          from pathlib import Path
-          p = Path('v3/index.html')
-          s = p.read_text(encoding='utf-8')
-
-          pattern = r'(<script\s+src=["\'](?:\./|/v3/)?v3-admin-tools\.js\?v=)[^"\']*(["\'])'
-          s2, n = re.subn(pattern, r'\g<1>' + os.environ['DEPLOY_SHA'] + r'\2', s, count=1)
-          if n == 0:
-              marker = '</head>'
-              tag = f'<script src="./v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script>'
-              if marker not in s:
-                  raise SystemExit('Could not find </head> in gh-pages/v3/index.html')
-              s2 = s.replace(marker, tag + marker, 1)
-
-          # Patch the core renderer with HTML-encoded quotes so the generated
-          # adminPage() JavaScript remains syntactically valid.
-          s2 = s2.replace('+ Add New Member', '+ Add Member')
-          s2 = s2.replace('✓ Complete '+"'", '✓ Done '+"'")
-          s2 = s2.replace('○ Not completed '+"'", '○ Not Done '+"'")
-          s2 = s2.replace('onclick="location.href=\'/v3/admin-albums.html\'"', 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"')
-
-          old = 'Class Updates</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
-          new = 'Class Updates</button><button class="btn secondary" onclick="location.href=&quot;/v3/admin-albums.html&quot;">Photo Albums</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
-          if old in s2 and 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"' not in s2:
-              s2 = s2.replace(old, new, 1)
-
-          marker = '<div id="adminList" class="admin-list"></div>'
-          replacement = '<div class="v3-admin-tools" style="display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn" type="button" onclick="typeof window.exportExcel===\'function\'?window.exportExcel():alert(\'Export is available after the Admin tools script loads.\')">Export</button><button class="btn secondary" type="button" onclick="typeof window.printList===\'function\'?window.printList():window.print()">Print</button></div>'+marker
-          if marker in s2 and 'typeof window.exportExcel' not in s2:
-              s2 = s2.replace(marker, replacement, 1)
-
-          inline = r'''<script data-v3-admin-inline="1">(function(){'use strict';function patch(){try{var app=document.getElementById('app');if(!app)return;var bs=Array.from(app.querySelectorAll('.actions button'));var u=bs.find(function(b){return b.textContent.trim()==='Class Updates'});var a=bs.find(function(b){return /^\+ Add New Member$|^\+ Add Member$/.test(b.textContent.trim())});if(a)a.textContent='+ Add Member';if(u&&!document.getElementById('v3InlineAlbums')){var p=document.createElement('button');p.id='v3InlineAlbums';p.className='btn secondary';p.type='button';p.textContent='Photo Albums';p.onclick=function(){location.href='/v3/admin-albums.html'};(a||u).parentNode.insertBefore(p,a||null)}var c=document.getElementById('filterComplete'),q=document.getElementById('filterPending'),members=window.adminMembers||[];if(c)c.textContent='✓ Done '+members.filter(function(m){return !!m.profile_completed}).length;if(q)q.textContent='○ Not Done '+members.filter(function(m){return !m.profile_completed}).length;if(document.getElementById('adminQ')&&!document.getElementById('v3InlineExport')){var f=app.querySelector('.admin-filters');if(f){var w=document.createElement('div');w.id='v3InlineExport';w.className='v3-admin-tools';w.style.cssText='display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap';var e=document.createElement('button');e.className='btn';e.type='button';e.textContent='Export';e.onclick=function(){if(typeof window.exportExcel==='function')return window.exportExcel();alert('Export is available after the Admin tools script loads.')};var pr=document.createElement('button');pr.className='btn secondary';pr.type='button';pr.textContent='Print';pr.onclick=function(){if(typeof window.printList==='function')return window.printList();window.print()};w.append(e,pr);f.insertAdjacentElement('afterend',w)}}}catch(e){window.__v3InlineAdminError=String(e&&e.stack||e)}}function boot(){patch();var n=0,id=setInterval(function(){patch();if(++n>30)clearInterval(id)},250)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',patch);window.addEventListener('hashchange',function(){setTimeout(patch,0)});if(document.body)new MutationObserver(patch).observe(document.body,{childList:true,subtree:true});})();</script>'''
-          if 'data-v3-admin-inline="1"' in s2:
-              s2 = re.sub(r'<script data-v3-admin-inline="1">.*?</script>', inline, s2, count=1, flags=re.S)
-          else:
-              s2 = s2.replace('</body>', inline + '</body>', 1)
-
-          p.write_text(s2, encoding='utf-8')
-          print('V3 Admin renderer repaired and deployment asset refreshed:', os.environ['DEPLOY_SHA'])
-          PY
+          git fetch origin main gh-pages
+          git worktree add /tmp/gh-pages-deploy origin/gh-pages
+          cd /tmp/gh-pages-deploy
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add v3/index.html
+          git checkout -B gh-pages origin/gh-pages
+          git checkout origin/main -- v3/index.html v3/v3-admin-tools.js
+          git add v3/index.html v3/v3-admin-tools.js
           if git diff --cached --quiet; then
-            echo "gh-pages V3 already current"
+            echo "gh-pages V3 source already matches main"
           else
-            git commit -m "V3: repair Admin renderer syntax [deploy]"
+            git commit -m "Deploy V3 source from main [skip ci]"
             git push origin HEAD:gh-pages
           fi
