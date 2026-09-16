@@ -79,10 +79,13 @@ jobs:
               raise SystemExit('Could not locate Admin Export/Print function boundaries')
           replacement = "function addExport(){var existing=document.getElementById(BUTTONS_ID);if(existing)return;var list=document.getElementById('adminList');var filters=document.querySelector('.admin-filters');var q=document.getElementById('adminQ');if(!list&&!filters&&!q)return;var anchor=list||filters||q;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);if(list)list.parentNode.insertBefore(w,list);else if(filters)filters.insertAdjacentElement('afterend',w);else q.parentElement.appendChild(w)}"
           s = s[:start] + replacement + s[end:]
+          bridge = "\nfunction installClickBridge(){if(window.__v3AdminClickBridge)return;window.__v3AdminClickBridge=true;document.addEventListener('click',function(ev){var t=ev.target&&ev.target.closest?ev.target.closest('#v3AdminToolsButtons button'):null;if(!t)return;ev.preventDefault();ev.stopImmediatePropagation();var isPrint=t.textContent.trim().toLowerCase()==='print';t.disabled=true;t.dataset.v3Working='1';try{if(isPrint){printList();setTimeout(function(){t.disabled=false},800)}else{exportExcel();setTimeout(function(){t.disabled=false},800)}}catch(e){t.disabled=false;alert((isPrint?'Print':'Export')+' failed: '+(e&&e.message||e))}},true)}\ninstallClickBridge();"
+          if 'function installClickBridge()' not in s:
+              s = s.replace('\n})();', bridge + '\n})();')
           if 'window.v3AdminExport=exportExcel;window.v3AdminPrint=printList;' not in s:
               s = s.replace('\n})();', '\nwindow.v3AdminExport=exportExcel;window.v3AdminPrint=printList;\n})();')
           p.write_text(s, encoding='utf-8')
-          print('Patched Admin Export/Print insertion point')
+          print('Patched Admin Export/Print click bridge')
           PY
 
           git config user.name "github-actions[bot]"
