@@ -29,17 +29,14 @@ jobs:
           p = Path('v3/index.html')
           s = p.read_text(encoding='utf-8')
           before = s
-
           s = s.replace('+ Add New Member', '+ Add Member')
           s = s.replace('✓ Complete '+"'", '✓ Done '+"'")
           s = s.replace('○ Not completed '+"'", '○ Not Done '+"'")
           s = s.replace('onclick="location.href=\'/v3/admin-albums.html\'"', 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"')
-
           old = 'Class Updates</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
           new = 'Class Updates</button><button class="btn secondary" onclick="location.href=&quot;/v3/admin-albums.html&quot;">Photo Albums</button><button class="btn" onclick="adminAdd()">+ Add Member</button>'
           if old in s and 'onclick="location.href=&quot;/v3/admin-albums.html&quot;"' not in s:
               s = s.replace(old, new, 1)
-
           photos = r'''const GOOGLE_PHOTOS_URL="https://photos.app.goo.gl/RN9Ttn1H7SMMt8CL6";
           async function photosPage(){
             const app=$("app");
@@ -57,12 +54,10 @@ jobs:
           s, n = re.subn(pattern, photos, s, count=1, flags=re.S)
           if n != 1:
               raise SystemExit('Could not locate the core Photos renderer')
-
           pattern2 = r'(<script\s+src=["\'](?:\./|/v3/)?v3-admin-tools\.js\?v=)[^"\']*(["\'])'
           s, n2 = re.subn(pattern2, r'\g<1>' + os.environ['DEPLOY_SHA'] + r'\2', s, count=1)
           if n2 == 0:
               s = s.replace('</body>', f'<script src="/v3/v3-admin-tools.js?v={os.environ["DEPLOY_SHA"]}"></script></body>', 1)
-
           if s == before:
               print('No V3 source changes needed')
           else:
@@ -70,9 +65,6 @@ jobs:
               print('Patched V3 source')
           PY
 
-          # Patch Admin Export/Print without depending on the exact minified
-          # text of the existing function. Locate the function boundaries by
-          # their stable names and replace the complete function body.
           python3 - <<'PY'
           from pathlib import Path
           p = Path('v3/v3-admin-tools.js')
@@ -81,7 +73,7 @@ jobs:
           end = s.find('function noBack(){', start)
           if start < 0 or end < 0:
               raise SystemExit('Could not locate Admin Export/Print function boundaries')
-          replacement = "function addExport(){var q=document.getElementById('adminQ'),f=document.querySelector('.admin-filters');if(!f&&q)f=q.closest('.admin-toolbar')||q.parentElement;if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);f.insertAdjacentElement('afterend',w)}"
+          replacement = "function addExport(){var q=document.getElementById('adminQ'),f=document.querySelector('.admin-filters');if(!f&&q)f=q.closest('.admin-toolbar')||q.parentElement;if(!f||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';var e=document.createElement('button');e.className='btn';e.textContent='Export';e.type='button';e.onclick=exportExcel;var p=document.createElement('button');p.className='btn secondary';p.textContent='Print';p.type='button';p.onclick=printList;w.append(e,p);f.insertAdjacentElement('afterend',w)}"
           s = s[:start] + replacement + s[end:]
           p.write_text(s, encoding='utf-8')
           print('Patched Admin Export/Print insertion point')
