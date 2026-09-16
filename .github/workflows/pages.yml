@@ -38,15 +38,24 @@ jobs:
               if marker not in s:
                   raise SystemExit('Could not find </head> in gh-pages/v3/index.html')
               s2 = s.replace(marker, tag + marker, 1)
+
+          # Put the Admin UI patch directly into the V3 page as a final fallback.
+          # This deliberately does not depend on v3-admin-tools.js loading.
+          inline = r'''<script data-v3-admin-inline="1">(function(){'use strict';function patch(){try{var app=document.getElementById('app');if(!app)return;var bs=Array.from(app.querySelectorAll('.actions button'));var u=bs.find(function(b){return b.textContent.trim()==='Class Updates'});var a=bs.find(function(b){return /^\+ Add New Member$|^\+ Add Member$/.test(b.textContent.trim())});if(a)a.textContent='+ Add Member';if(u&&!document.getElementById('v3InlineAlbums')){var p=document.createElement('button');p.id='v3InlineAlbums';p.className='btn secondary';p.type='button';p.textContent='Photo Albums';p.onclick=function(){location.href='/v3/admin-albums.html'};(a||u).parentNode.insertBefore(p,a||null)}var c=document.getElementById('filterComplete'),q=document.getElementById('filterPending'),members=window.adminMembers||[];if(c)c.textContent='✓ Done '+members.filter(function(m){return !!m.profile_completed}).length;if(q)q.textContent='○ Not Done '+members.filter(function(m){return !m.profile_completed}).length;if(document.getElementById('adminQ')&&!document.getElementById('v3InlineExport')){var f=app.querySelector('.admin-filters');if(f){var w=document.createElement('div');w.id='v3InlineExport';w.className='v3-admin-tools';w.style.cssText='display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap';var e=document.createElement('button');e.className='btn';e.type='button';e.textContent='Export';e.onclick=function(){if(typeof window.exportExcel==='function')return window.exportExcel();alert('Export is available after the Admin tools script loads.')};var pr=document.createElement('button');pr.className='btn secondary';pr.type='button';pr.textContent='Print';pr.onclick=function(){if(typeof window.printList==='function')return window.printList();window.print()};w.append(e,pr);f.insertAdjacentElement('afterend',w)}}}catch(e){window.__v3InlineAdminError=String(e&&e.stack||e)}}function boot(){patch();var n=0,id=setInterval(function(){patch();if(++n>30)clearInterval(id)},250)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();window.addEventListener('load',patch);window.addEventListener('hashchange',function(){setTimeout(patch,0)});if(document.body)new MutationObserver(patch).observe(document.body,{childList:true,subtree:true});})();</script>'''
+          if 'data-v3-admin-inline="1"' in s2:
+              s2 = re.sub(r'<script data-v3-admin-inline="1">.*?</script>', inline, s2, count=1, flags=re.S)
+          else:
+              s2 = s2.replace('</body>', inline + '</body>', 1)
+
           p.write_text(s2, encoding='utf-8')
-          print('V3 admin tools loader refreshed:', os.environ['DEPLOY_SHA'])
+          print('V3 admin tools loader and inline fallback refreshed:', os.environ['DEPLOY_SHA'])
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add v3/index.html
           if git diff --cached --quiet; then
-            echo "gh-pages loader already current"
+            echo "gh-pages V3 already current"
           else
-            git commit -m "V3: refresh admin tools asset URL [deploy]"
+            git commit -m "V3: embed Admin UI fallback [deploy]"
             git push origin HEAD:gh-pages
           fi
