@@ -16,21 +16,5 @@ s.onload=function(){
 @media(max-width:700px){.v3-header-separated{display:block!important}.v3-header-separated>.nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;justify-content:space-between!important;width:100%!important;margin-top:7px!important}.v3-header-separated>.signedin{display:flex!important;flex-basis:100%!important;width:100%!important;justify-content:flex-start!important;padding:6px 5px 0!important;margin-top:2px!important}}
 @media(max-width:520px){.home-copy{min-height:0}.home-photo{height:auto}.home-photo img{height:auto;width:100%;object-fit:contain}.home-copy h2{font-size:32px}.home-copy p{font-size:15px;line-height:1.5}}`;
  document.head.appendChild(st);
-};
-document.head.appendChild(s);
-
-var HERO_IMG='data:image/jpeg;base64,PLACEHOLDER';
-function applyHeroImage(){
- var img=document.querySelector('.home-photo img');
- if(img && img.src!==HERO_IMG){img.src=HERO_IMG;img.removeAttribute('srcset');img.setAttribute('data-exact-home-photo','Gang COEP Header.jpg');}
- var top=document.querySelector('header .top');
- if(top){
-   var signed=top.querySelector('.signedin');
-   var nav=top.querySelector('.nav');
-   if(signed && signed.parentElement!==top)top.appendChild(signed);
-   if(signed && nav && signed.parentElement===top)top.classList.add('v3-header-separated');
- }
-}
-var n=0,t=setInterval(function(){applyHeroImage();if(++n>120)clearInterval(t);},250);
-applyHeroImage();
+};document.head.appendChild(s);
 })();
