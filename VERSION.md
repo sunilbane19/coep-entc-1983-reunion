@@ -11,3 +11,7 @@ This version is the known-good baseline for the initial class release.
 - Photos landing page includes the scenic placeholder image
 - Mobile and desktop testing completed
 - Temporary Admin retained for initial rollout
+
+## 2026-09-17 rollback marker
+
+Application source rolled back to the stable pre-Hero-change V3 baseline (`44e5918b4c3748a168659ebcc92546088d482c15`).
