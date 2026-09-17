@@ -1,0 +1,72 @@
+name: Apply V3 Hero Source Fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  fix-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch V3 hero source and layout
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('v3/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          replacements = [
+              ('src=\"coep-entc-1983-group.avif\"', 'src=\"Gang%20COEP%20Header.jpg\"'),
+              ('grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;margin:0 0 14px', 'grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px;align-items:stretch;margin:0 0 14px'),
+              ('@media(max-width:800px){.home-hero{grid-template-columns:1fr 1fr}', '@media(max-width:800px){.home-hero{grid-template-columns:1fr}'),
+              ('<script src=\"/v3/v3-admin-tools.js?v=20260915-1\"></script>', '<script src=\"/v3/v3-admin-tools.js?v=20260917-hero\"></script>'),
+          ]
+          for old, new in replacements:
+              if old not in s:
+                  print('WARNING: pattern not found:', old)
+              s = s.replace(old, new)
+
+          marker = '</style>'
+          css = '''\n.home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important}\n.home-photo{height:auto!important;min-height:0!important;overflow:hidden!important}\n.home-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;display:block!important}\n@media(max-width:800px){.home-hero{grid-template-columns:1fr!important}.home-photo{order:1!important;height:auto!important}.home-copy{order:2!important}.home-photo img{width:100%!important;height:auto!important;object-fit:contain!important}}\n'''
+          if 'home-photo img{width:100%!important' not in s:
+              s = s.replace(marker, css + marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+          rm -f coep-entc-1983-group.avif
+
+      - name: Commit source correction
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v3/index.html coep-entc-1983-group.avif
+          if git diff --cached --quiet; then
+            echo 'No source changes needed.'
+          else
+            git commit -m 'V3: use latest hero photo directly and fix responsive layout'
+            git push
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
