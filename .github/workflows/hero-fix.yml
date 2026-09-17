@@ -31,12 +31,18 @@ jobs:
           p = Path('v3/index.html')
           s = p.read_text(encoding='utf-8')
 
-          # Use the latest uploaded JPEG directly, not the retired AVIF.
-          s = s.replace('src="coep-entc-1983-group.avif"', 'src="/v3/Gang%20COEP%20Header.jpg?v=20260917d"')
+          # The homePage HTML is embedded inside a JavaScript string, so the
+          # source attribute contains escaped quotes in the file.
+          replacements = [
+              ('src=\\"coep-entc-1983-group.avif\\"', 'src=\\"/v3/Gang%20COEP%20Header.jpg?v=20260917e\\"'),
+              ('src="coep-entc-1983-group.avif"', 'src="/v3/Gang%20COEP%20Header.jpg?v=20260917e"'),
+          ]
+          for old, new in replacements:
+              s = s.replace(old, new)
 
           # Force the current admin-tools loader to be cache-busted.
-          s = re.sub(r'<script src="/v3/v3-admin-tools\.js\?v=[^"]+"></script>',
-                     '<script src="/v3/v3-admin-tools.js?v=20260917d"></script>', s, count=1)
+          s = re.sub(r'<script src="/v3/v3-admin-tools\\.js\\?v=[^"]+"></script>',
+                     '<script src="/v3/v3-admin-tools.js?v=20260917e"></script>', s, count=1)
 
           css = '''
           .home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
