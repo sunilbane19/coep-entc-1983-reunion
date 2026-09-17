@@ -1,7 +1,11 @@
 (function(){
   'use strict';
   var BUTTONS_ID='v3AdminToolsButtons', ALBUM_BUTTON_ID='v3AdminAlbumsButton';
+  var SUPABASE_URL='https://tizxolwmqrwvdheeqxrv.supabase.co';
+  var SUPABASE_KEY='sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta';
+  var sb=null;
   function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+  function getClient(){if(!sb&&window.supabase)sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});return sb;}
   function rows(){var r=(window.adminMembers||[]).slice(),q=(document.getElementById('adminQ')?.value||'').toLowerCase().trim();if(q)r=r.filter(function(m){return [m.full_name,m.preferred_name,m.mobile,m.whatsapp_phone,m.email,m.current_city,m.current_state,m.current_country,m.profession,m.company].some(function(v){return String(v||'').toLowerCase().includes(q);});});var f=window.adminFilter||'all';if(f==='complete')r=r.filter(function(m){return !!m.profile_completed;});if(f==='pending')r=r.filter(function(m){return !m.profile_completed;});if(f==='admins')r=r.filter(function(m){return (window.adminRoles||{})[m.id]==='admin';});return r;}
   function labels(){var c=document.getElementById('filterComplete'),p=document.getElementById('filterPending'),ms=window.adminMembers||[];if(c)c.textContent='✓ Done '+ms.filter(function(m){return !!m.profile_completed;}).length;if(p)p.textContent='○ Not Done '+ms.filter(function(m){return !m.profile_completed;}).length;}
   function addAlbum(){if(!window.isAdmin||document.getElementById(ALBUM_BUTTON_ID))return;var bs=Array.from(document.querySelectorAll('#app .actions button')),u=bs.find(function(b){return b.textContent.trim()==='Class Updates';}),a=bs.find(function(b){return b.textContent.trim()==='+ Add New Member';});if(!u&&!a)return;var b=document.createElement('button');b.id=ALBUM_BUTTON_ID;b.className='btn secondary';b.type='button';b.textContent='Photo Albums';b.onclick=function(){location.href='/v3/admin-albums.html';};(a||u).parentNode.insertBefore(b,a||null);}
@@ -9,6 +13,18 @@
   function exportExcel(){if(!window.ExcelJS){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';s.onload=exportExcel;document.head.appendChild(s);return;}var r=rows(),wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Class List');ws.mergeCells('A1:F1');ws.getCell('A1').value='COEP ENTC 1983 — Class Reunion';ws.mergeCells('A2:F2');ws.getCell('A2').value='Filter: '+(window.adminFilter||'all')+' • '+r.length+' records • '+new Date().toLocaleDateString('en-IN');ws.addRow(['S.N.','Name','Address','Town / City','Phone No.','Email']);r.forEach(function(m,i){ws.addRow([i+1,m.full_name||m.preferred_name||'',m.detailed_address||'',[m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '),m.mobile||m.whatsapp_phone||'',m.email||'']);});[8,28,42,28,20,34].forEach(function(v,i){ws.getColumn(i+1).width=v;});wb.xlsx.writeBuffer().then(function(buf){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='COEP_ENTC_1983_'+(window.adminFilter||'all')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);});}
   function printList(){var r=rows(),w=window.open('','_blank','width=1100,height=800');if(!w){alert('Please allow pop-ups for the reunion site to print.');return;}var h='<!doctype html><html><head><title>COEP ENTC 1983 — Class Reunion</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px;text-align:left}th{background:#f3ead9}</style></head><body><button onclick="window.print()">Print</button> <button onclick="window.close()">Exit</button><h1>COEP ENTC 1983 — Class Reunion</h1><table><thead><tr><th>S.N.</th><th>Name</th><th>Address</th><th>Town / City</th><th>Phone No.</th><th>Email</th></tr></thead><tbody>'+r.map(function(m,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(m.full_name||m.preferred_name||'')+'</td><td>'+esc(m.detailed_address||'')+'</td><td>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '))+'</td><td>'+esc(m.mobile||m.whatsapp_phone||'')+'</td><td>'+esc(m.email||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>';w.document.write(h);w.document.close();}
   function removeBack(){var a=document.getElementById('app');if(a)Array.from(a.querySelectorAll('button,a')).forEach(function(e){if(e.textContent.trim()==='Back to Admin')e.remove();});}
-  function install(){labels();addAlbum();addExportPrint();removeBack();}
+  async function publicAlbums(){
+    var wrap=document.querySelector('.photos-landing');
+    if(!wrap||wrap.dataset.albumPatch==='done')return;
+    var client=getClient();if(!client)return;
+    wrap.dataset.albumPatch='loading';
+    var r=await client.from('reunion_photo_albums').select('id,title,description,url,sort_order,is_active').eq('is_active',true).order('sort_order').order('id');
+    if(r.error){wrap.dataset.albumPatch='error';return;}
+    var albums=r.data||[];
+    if(!albums.length){wrap.dataset.albumPatch='done';return;}
+    wrap.innerHTML='<div class="photos-message"><div class="photo-icon">📷</div><h3>Our Reunion Photo Albums</h3><p>Open our shared reunion albums to view the latest photographs and add your own photos to the common collection.</p><div class="album-public-list">'+albums.map(function(a){return '<article class="album-public"><h4>'+esc(a.title||'Photo Album')+'</h4><p>'+esc(a.description||'')+'</p><a class="btn photos-open-btn" href="'+esc(a.url||'#')+'" target="_blank" rel="noopener">Open Album →</a></article>';}).join('')+'</div><div class="photos-note">You will leave the reunion site and open the shared album in Google Photos or Google Drive.</div></div><div class="photos-visual"><div class="photos-visual-fallback">📷</div></div>';
+    wrap.dataset.albumPatch='done';
+  }
+  function install(){labels();addAlbum();addExportPrint();removeBack();publicAlbums();}
   var n=0,t=setInterval(function(){install();if(++n>120)clearInterval(t);},250);install();
 })();
