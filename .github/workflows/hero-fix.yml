@@ -40,12 +40,14 @@ jobs:
           for old, new in replacements:
               s = s.replace(old, new)
 
-          # Every deployment gets a unique query string. This is important for
-          # V3 because GitHub Pages/browser caches can otherwise keep an older
-          # v3-admin-tools.js even after the source has been updated.
+          # Every deployment gets a unique query string. This prevents
+          # GitHub Pages/browser caches from retaining an older admin-tools.js.
           asset_version = os.environ.get('GITHUB_SHA', 'dev')
-          s = re.sub(r'<script src="/v3/v3-admin-tools\\.js\\?v=[^"]+"></script>',
-                     f'<script src="/v3/v3-admin-tools.js?v={asset_version}"></script>', s, count=1)
+          pattern = r'<script src="/v3/v3-admin-tools\.js\?v=[^"]+"></script>'
+          replacement = f'<script src="/v3/v3-admin-tools.js?v={asset_version}"></script>'
+          s, n = re.subn(pattern, replacement, s, count=1)
+          if n != 1:
+              raise SystemExit('Could not find the V3 admin-tools script tag to cache-bust.')
 
           css = '''
           .home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
