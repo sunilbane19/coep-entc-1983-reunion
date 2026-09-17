@@ -123,6 +123,11 @@ button,input,textarea,select{max-width:100%}
 .home-photo{height:auto!important;min-height:0!important;overflow:hidden!important}
 .home-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;display:block!important}
 @media(max-width:800px){.home-hero{grid-template-columns:1fr!important}.home-photo{order:1!important;height:auto!important}.home-copy{order:2!important}.home-photo img{width:100%!important;height:auto!important;object-fit:contain!important}}
+
+.home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
+.home-photo{height:auto!important;min-height:0!important;overflow:hidden!important;align-self:stretch!important}
+.home-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important;display:block!important}
+@media(max-width:800px){.home-hero{grid-template-columns:1fr!important}.home-photo{order:1!important;height:auto!important}.home-copy{order:2!important}.home-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}}
 </style></head><body><header><div class="top"><div><h1>Class Reunion</h1><div class="tag">COEP ENTC 1983</div></div><div id="nav" class="nav"></div></div></header><main class="container"><section class="hero"><p></p></section><div id="app"><section class="card"><h2>Welcome</h2><p class="stat">Loading the reunion site…</p></section></div></main><footer class="site-footer">COEP ENTC 1983</footer>
 <script>
 const sb=supabase.createClient("https://tizxolwmqrwvdheeqxrv.supabase.co","sb_publishable_lYUj7I1I7Rij5o0ptqPWrA_Qs37Aqta");
@@ -375,4 +380,4 @@ async function start(){
   }
 }
 start();
-</script><script src="/v3/v3-admin-tools.js?v=20260917-hero"></script></body></html>
+</script><script src="/v3/v3-admin-tools.js?v=20260917d"></script></body></html>
