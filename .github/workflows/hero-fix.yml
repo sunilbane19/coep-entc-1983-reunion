@@ -48,14 +48,14 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
-          # Retire the old V3 hero image. The new JPEG remains untouched.
-          rm -f v3/coep-entc-1983-group.avif
+          # Retire the old V3 hero image if it is still present.
+          git rm -f --ignore-unmatch v3/coep-entc-1983-group.avif
 
       - name: Commit source correction
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add v3/index.html v3/coep-entc-1983-group.avif
+          git add v3/index.html
           if git diff --cached --quiet; then
             echo 'No source changes needed.'
           else
