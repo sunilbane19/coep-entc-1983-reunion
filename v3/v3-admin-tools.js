@@ -16,5 +16,10 @@ s.onload=function(){
 @media(max-width:700px){.v3-header-separated{display:block!important}.v3-header-separated>.nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;justify-content:space-between!important;width:100%!important;margin-top:7px!important}.v3-header-separated>.signedin{display:flex!important;flex-basis:100%!important;width:100%!important;justify-content:flex-start!important;padding:6px 5px 0!important;margin-top:2px!important}}
 @media(max-width:520px){.home-copy{min-height:0}.home-photo{height:auto}.home-photo img{height:auto;width:100%;object-fit:contain}.home-copy h2{font-size:32px}.home-copy p{font-size:15px;line-height:1.5}}`;
  document.head.appendChild(st);
+ var photoData='data:image/jpeg;base64,"+b64+"';
+ var tries=0;
+ function setHomePhoto(){var img=document.querySelector('.home-photo img');if(img){img.src=photoData;img.removeAttribute('srcset');return true;}return false;}
+ var timer=setInterval(function(){if(setHomePhoto()||++tries>80)clearInterval(timer);},250);
+ setHomePhoto();
 };document.head.appendChild(s);
 })();
