@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Apply V3 hero source correction
+      - name: Apply V3 source corrections
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -40,8 +40,30 @@ jobs:
           for old, new in replacements:
               s = s.replace(old, new)
 
-          # Every deployment gets a unique query string. This prevents
-          # GitHub Pages/browser caches from retaining an older admin-tools.js.
+          # IMPORTANT: Photos is rendered by the lexical photosPage() function
+          # inside index.html. Replacing window.photosPage from an enhancement
+          # script does not change what render() calls. Make the database-backed
+          # album renderer the actual page function instead of patching around it.
+          photo_renderer = '''async function photosPage(){
+  var app=$("app");
+  if(!app)return;
+  app.innerHTML='<section class="card"><div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common Google Photos albums.</div></div><div id="v3PhotoAlbums" class="v3-photo-album-grid"><div class="stat">Loading albums…</div></div></section>';
+  var r=await sb.from("reunion_photo_albums").select("id,title,description,url,sort_order,is_active").eq("is_active",true).order("sort_order",{ascending:true}).order("id",{ascending:true});
+  if(r.error){return app.innerHTML='<section class="card"><h2>Photos</h2><div class="notice error">'+esc(r.error.message)+'</div></section>';}
+  var rows=r.data||[],host=$("v3PhotoAlbums");
+  if(!host)return;
+  host.innerHTML=rows.length?rows.map(function(a){return '<article class="v3-photo-album-card"><div class="album-order">Album '+esc(a.sort_order)+'</div><h3>'+esc(a.title||"Photo Album")+'</h3><p>'+esc(a.description||"")+'</p><div class="actions"><a class="btn" href="'+esc(a.url||"#")+'" target="_blank" rel="noopener noreferrer">Open Photo Album →</a></div></article>';}).join(""):'<p class="stat">No photo albums have been added yet.</p>';
+}
+'''
+
+          # Replace the old lexical renderer, not window.photosPage. The old
+          # function is followed by the next top-level declaration.
+          pattern = r'async function photosPage\(\)\{.*?\n\}\n\n'
+          s, n = re.subn(pattern, photo_renderer, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('Could not replace the original lexical photosPage() function.')
+
+          # Every deployment gets a unique query string for admin-tools.js.
           asset_version = os.environ.get('GITHUB_SHA', 'dev')
           pattern = r'<script src="/v3/v3-admin-tools\.js\?v=[^"]+"></script>'
           replacement = f'<script src="/v3/v3-admin-tools.js?v={asset_version}"></script>'
@@ -62,7 +84,6 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
-          # Retire the old V3 hero image if it is still present.
           git rm -f --ignore-unmatch v3/coep-entc-1983-group.avif
 
       - name: Commit source correction
@@ -73,7 +94,7 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No source changes needed.'
           else
-            git commit -m 'V3: use latest hero JPEG directly and retire old AVIF'
+            git commit -m 'V3: make Photos renderer part of page lifecycle'
             git push
           fi
 
