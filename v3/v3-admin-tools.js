@@ -1,32 +1,14 @@
-(function(){'use strict';
-var s=document.createElement('script');
-s.src='https://raw.githubusercontent.com/sunilbane19/coep-entc-1983-reunion/44e5918b4c3748a168659ebcc92546088d482c15/v3/v3-admin-tools.js?v=20260917c';
-s.onload=function(){
- var st=document.createElement('style');st.id='v3HomeLayoutStyle';st.textContent=`
-.home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
-.home-copy{height:100%!important;min-height:100%!important;padding:28px 30px!important}
-.home-photo{height:auto!important;min-height:0!important;padding:0!important;display:block!important;overflow:hidden!important;align-self:stretch!important}
-.home-photo img{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important;display:block!important}
-.home-photo:before{display:none!important}
-.home-photo-caption{position:absolute!important;left:24px!important;bottom:20px!important}
-@media(max-width:800px){.home-hero{grid-template-columns:1fr!important;gap:12px!important}.home-photo{order:1!important;height:auto!important}.home-copy{order:2!important;min-height:0!important;height:auto!important;padding:22px 20px!important}.home-photo img{width:100%!important;height:auto!important;max-height:none!important}.home-photo-caption{left:16px!important;bottom:12px!important;font-size:20px!important}}
-@media(max-width:520px){.home-copy{min-height:0!important}.home-photo{height:auto!important}.home-photo img{height:auto!important;width:100%!important;object-fit:contain!important}.home-copy h2{font-size:32px}.home-copy p{font-size:15px;line-height:1.5}}
-`;
- document.head.appendChild(st);
- function applyHeroImage(){
-  var imgs=document.querySelectorAll('.home-photo img');
-  imgs.forEach(function(img){
-   var exact='/v3/Gang%20COEP%20Header.jpg?v=20260917c';
-   if(img.getAttribute('src')!==exact){img.setAttribute('src',exact);}
-   img.removeAttribute('srcset');
-   img.setAttribute('data-exact-home-photo','Gang COEP Header.jpg');
-   img.style.width='100%';img.style.height='auto';img.style.objectFit='contain';
-  });
- }
- applyHeroImage();
- var observer=new MutationObserver(function(){applyHeroImage();});
- observer.observe(document.body,{childList:true,subtree:true});
- setInterval(applyHeroImage,1000);
-};
-document.head.appendChild(s);
+(function(){
+  'use strict';
+  var BUTTONS_ID='v3AdminToolsButtons', ALBUM_BUTTON_ID='v3AdminAlbumsButton';
+  function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+  function rows(){var r=(window.adminMembers||[]).slice(),q=(document.getElementById('adminQ')?.value||'').toLowerCase().trim();if(q)r=r.filter(function(m){return [m.full_name,m.preferred_name,m.mobile,m.whatsapp_phone,m.email,m.current_city,m.current_state,m.current_country,m.profession,m.company].some(function(v){return String(v||'').toLowerCase().includes(q);});});var f=window.adminFilter||'all';if(f==='complete')r=r.filter(function(m){return !!m.profile_completed;});if(f==='pending')r=r.filter(function(m){return !m.profile_completed;});if(f==='admins')r=r.filter(function(m){return (window.adminRoles||{})[m.id]==='admin';});return r;}
+  function labels(){var c=document.getElementById('filterComplete'),p=document.getElementById('filterPending'),ms=window.adminMembers||[];if(c)c.textContent='✓ Done '+ms.filter(function(m){return !!m.profile_completed;}).length;if(p)p.textContent='○ Not Done '+ms.filter(function(m){return !m.profile_completed;}).length;}
+  function addAlbum(){if(!window.isAdmin||document.getElementById(ALBUM_BUTTON_ID))return;var bs=Array.from(document.querySelectorAll('#app .actions button')),u=bs.find(function(b){return b.textContent.trim()==='Class Updates';}),a=bs.find(function(b){return b.textContent.trim()==='+ Add New Member';});if(!u&&!a)return;var b=document.createElement('button');b.id=ALBUM_BUTTON_ID;b.className='btn secondary';b.type='button';b.textContent='Photo Albums';b.onclick=function(){location.href='/v3/admin-albums.html';};(a||u).parentNode.insertBefore(b,a||null);}
+  function addExportPrint(){var f=document.querySelector('.admin-filters');if(!f||!window.adminMembers||document.getElementById(BUTTONS_ID))return;var w=document.createElement('div');w.id=BUTTONS_ID;w.className='v3-admin-tools';w.style.cssText='display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap';var ex=document.createElement('button');ex.className='btn';ex.type='button';ex.textContent='Export';ex.onclick=exportExcel;var pr=document.createElement('button');pr.className='btn secondary';pr.type='button';pr.textContent='Print';pr.onclick=printList;w.append(ex,pr);f.insertAdjacentElement('afterend',w);}
+  function exportExcel(){if(!window.ExcelJS){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';s.onload=exportExcel;document.head.appendChild(s);return;}var r=rows(),wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Class List');ws.mergeCells('A1:F1');ws.getCell('A1').value='COEP ENTC 1983 — Class Reunion';ws.mergeCells('A2:F2');ws.getCell('A2').value='Filter: '+(window.adminFilter||'all')+' • '+r.length+' records • '+new Date().toLocaleDateString('en-IN');ws.addRow(['S.N.','Name','Address','Town / City','Phone No.','Email']);r.forEach(function(m,i){ws.addRow([i+1,m.full_name||m.preferred_name||'',m.detailed_address||'',[m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '),m.mobile||m.whatsapp_phone||'',m.email||'']);});[8,28,42,28,20,34].forEach(function(v,i){ws.getColumn(i+1).width=v;});wb.xlsx.writeBuffer().then(function(buf){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='COEP_ENTC_1983_'+(window.adminFilter||'all')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);});}
+  function printList(){var r=rows(),w=window.open('','_blank','width=1100,height=800');if(!w){alert('Please allow pop-ups for the reunion site to print.');return;}var h='<!doctype html><html><head><title>COEP ENTC 1983 — Class Reunion</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #bbb;padding:6px;text-align:left}th{background:#f3ead9}</style></head><body><button onclick="window.print()">Print</button> <button onclick="window.close()">Exit</button><h1>COEP ENTC 1983 — Class Reunion</h1><table><thead><tr><th>S.N.</th><th>Name</th><th>Address</th><th>Town / City</th><th>Phone No.</th><th>Email</th></tr></thead><tbody>'+r.map(function(m,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(m.full_name||m.preferred_name||'')+'</td><td>'+esc(m.detailed_address||'')+'</td><td>'+esc([m.current_city,m.current_state,m.current_country].filter(Boolean).join(', '))+'</td><td>'+esc(m.mobile||m.whatsapp_phone||'')+'</td><td>'+esc(m.email||'')+'</td></tr>';}).join('')+'</tbody></table></body></html>';w.document.write(h);w.document.close();}
+  function removeBack(){var a=document.getElementById('app');if(a)Array.from(a.querySelectorAll('button,a')).forEach(function(e){if(e.textContent.trim()==='Back to Admin')e.remove();});}
+  function install(){labels();addAlbum();addExportPrint();removeBack();}
+  var n=0,t=setInterval(function(){install();if(++n>120)clearInterval(t);},250);install();
 })();
