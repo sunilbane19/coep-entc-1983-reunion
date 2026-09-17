@@ -96,13 +96,28 @@
     }
   }
 
-  // Replace the original Photos renderer before the next navigation. This is
-  // the important fix: the old single-album page is no longer rendered first
-  // and then patched asynchronously.
+  // The original index.html contains a lexical photosPage() function, so
+  // assigning window.photosPage does not change what render() calls. The
+  // reliable navigation fix is therefore to intercept the global go() used by
+  // the header and route Photos directly to the database-backed renderer.
+  var baseGo=window.go;
+  if(typeof baseGo==='function'&&!baseGo.__v3PhotosWrapped){
+    var wrappedGo=function(x){
+      if(x==='photos'){
+        location.hash='photos';
+        return photosPageV3().then(function(){window.scrollTo(0,0);});
+      }
+      return baseGo.apply(this,arguments);
+    };
+    wrappedGo.__v3PhotosWrapped=true;
+    window.go=wrappedGo;
+  }
+
+  // Keep this available for direct #photos loads. Do not add a hashchange
+  // Photos renderer: go() handles navigation itself and a second async render
+  // would reintroduce the race this fix is intended to remove.
   window.photosPage=photosPageV3;
 
-  // Admin remains the existing renderer, but its tools are installed after
-  // every render instead of relying on a fixed polling window.
   var baseAdmin=window.adminPage;
   if(typeof baseAdmin==='function'&&!baseAdmin.__v3Wrapped){
     var wrappedAdmin=async function(){await baseAdmin();addAdminTools();};
@@ -111,7 +126,6 @@
   }
 
   function onHash(){
-    if(location.hash==='#photos')setTimeout(function(){photosPageV3();},0);
     if(location.hash==='#admin')setTimeout(function(){addAdminTools();},50);
   }
   window.addEventListener('hashchange',onHash);
