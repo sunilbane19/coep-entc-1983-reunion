@@ -1,0 +1,76 @@
+name: Deploy V3 Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  fix-and-deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply V3 hero source correction
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('v3/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Use the latest uploaded JPEG directly, not the retired AVIF.
+          s = s.replace('src="coep-entc-1983-group.avif"', 'src="/v3/Gang%20COEP%20Header.jpg?v=20260917d"')
+
+          # Force the current admin-tools loader to be cache-busted.
+          s = re.sub(r'<script src="/v3/v3-admin-tools\.js\?v=[^"]+"></script>',
+                     '<script src="/v3/v3-admin-tools.js?v=20260917d"></script>', s, count=1)
+
+          css = '''
+          .home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
+          .home-photo{height:auto!important;min-height:0!important;overflow:hidden!important;align-self:stretch!important}
+          .home-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:contain!important;display:block!important}
+          @media(max-width:800px){.home-hero{grid-template-columns:1fr!important}.home-photo{order:1!important;height:auto!important}.home-copy{order:2!important}.home-photo img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}}
+          '''
+          marker = '</style>'
+          if '.home-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:auto!important' not in s:
+              s = s.replace(marker, css + marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          # Retire the old V3 hero image. The new JPEG remains untouched.
+          rm -f v3/coep-entc-1983-group.avif
+
+      - name: Commit source correction
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add v3/index.html v3/coep-entc-1983-group.avif
+          if git diff --cached --quiet; then
+            echo 'No source changes needed.'
+          else
+            git commit -m 'V3: use latest hero JPEG directly and retire old AVIF'
+            git push
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
