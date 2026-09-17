@@ -26,7 +26,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
+          import os, re
 
           p = Path('v3/index.html')
           s = p.read_text(encoding='utf-8')
@@ -40,9 +40,12 @@ jobs:
           for old, new in replacements:
               s = s.replace(old, new)
 
-          # Force the current admin-tools loader to be cache-busted.
+          # Every deployment gets a unique query string. This is important for
+          # V3 because GitHub Pages/browser caches can otherwise keep an older
+          # v3-admin-tools.js even after the source has been updated.
+          asset_version = os.environ.get('GITHUB_SHA', 'dev')
           s = re.sub(r'<script src="/v3/v3-admin-tools\\.js\\?v=[^"]+"></script>',
-                     '<script src="/v3/v3-admin-tools.js?v=20260917e"></script>', s, count=1)
+                     f'<script src="/v3/v3-admin-tools.js?v={asset_version}"></script>', s, count=1)
 
           css = '''
           .home-hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;align-items:stretch!important;gap:18px!important}
