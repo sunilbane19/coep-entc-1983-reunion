@@ -24,7 +24,7 @@
     if(r.error){wrap.dataset.albumPatch='error';return;}
     var albums=r.data||[];
     if(!albums.length){wrap.dataset.albumPatch='done';return;}
-    wrap.innerHTML='<div><h2>Photos</h2><div class="stat">Our reunion photographs are shared in our common photo albums.</div></div><div class="v3-photo-album-grid">'+albums.map(function(a){return '<article class="v3-photo-album-card"><div class="album-order">Album '+esc(a.sort_order)+'</div><h3>'+esc(a.title||'Photo Album')+'</h3><p>'+esc(a.description||'')+'</p><div class="actions"><a class="btn" href="'+esc(a.url||'#')+'" target="_blank" rel="noopener noreferrer">Open Photo Album →</a></div></article>';}).join('')+'</div>';
+    wrap.innerHTML='<div class="v3-photo-album-grid">'+albums.map(function(a){return '<article class="v3-photo-album-card"><div class="album-order">Album '+esc(a.sort_order)+'</div><h3>'+esc(a.title||'Photo Album')+'</h3><p>'+esc(a.description||'')+'</p><div class="actions"><a class="btn" href="'+esc(a.url||'#')+'" target="_blank" rel="noopener noreferrer">Open Photo Album →</a></div></article>';}).join('')+'</div>';
     wrap.dataset.albumPatch='done';
   }
   function install(){labels();addAlbum();addExportPrint();removeBack();publicAlbums();}
