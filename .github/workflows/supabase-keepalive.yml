@@ -1,0 +1,58 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Query Supabase every 3 days so the project has regular database activity.
+    - cron: "17 3 */3 * *"
+    # Also make a harmless repository commit on the first of each month.
+    - cron: "47 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Query Supabase
+        env:
+          SUPABASE_URL: https://tizxolwmqrwvdheeqxrv.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY repository secret is not configured."
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            --retry 3 \
+            --retry-delay 5 \
+            "${SUPABASE_URL}/rest/v1/reunion_class_updates?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+
+          echo
+          echo "Supabase keepalive request completed successfully."
+
+      - name: Checkout repository
+        if: github.event.schedule == '47 3 1 * *'
+        uses: actions/checkout@v4
+
+      - name: Update monthly keepalive marker
+        if: github.event.schedule == '47 3 1 * *'
+        run: |
+          mkdir -p .github/keepalive
+          printf 'Last repository keepalive: %s\n' "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > .github/keepalive/status.txt
+
+      - name: Commit monthly keepalive marker
+        if: github.event.schedule == '47 3 1 * *'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive/status.txt
+          git diff --cached --quiet || git commit -m "chore: update keepalive marker"
+          git push
