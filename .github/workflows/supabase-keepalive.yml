@@ -58,22 +58,10 @@ jobs:
 
           if [ "${SUPABASE_STATUS}" = "success" ]; then
             SUBJECT="COEP Supabase keepalive: SUCCESS"
-            BODY="The COEP ENTC 1983 Reunion Supabase keepalive completed successfully.
-
-Supabase project: tizxolwmqrwvdheeqxrv
-Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-
-GitHub Actions run:
-${RUN_URL}"
+            BODY="COEP ENTC 1983 Reunion Supabase keepalive completed successfully. Supabase project: tizxolwmqrwvdheeqxrv. Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC'). GitHub Actions run: ${RUN_URL}"
           else
             SUBJECT="COEP Supabase keepalive: FAILED"
-            BODY="The COEP ENTC 1983 Reunion Supabase keepalive failed.
-
-Supabase project: tizxolwmqrwvdheeqxrv
-Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-
-Please check the GitHub Actions run:
-${RUN_URL}"
+            BODY="COEP ENTC 1983 Reunion Supabase keepalive failed. Supabase project: tizxolwmqrwvdheeqxrv. Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC'). Check the GitHub Actions run: ${RUN_URL}"
           fi
 
           PAYLOAD=$(jq -n \
