@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="96" fill="#fbf5e9"/>
+<circle cx="256" cy="238" r="168" fill="#fffaf1" stroke="#c98616" stroke-width="18"/>
+<text x="256" y="215" text-anchor="middle" font-family="Georgia,serif" font-size="92" font-weight="700" fill="#3e2919">COEP</text>
+<text x="256" y="315" text-anchor="middle" font-family="Arial,sans-serif" font-size="92" font-weight="700" fill="#c98616">1983</text>
+<path d="M150 370h212" stroke="#c98616" stroke-width="12" stroke-linecap="round"/>
+</svg>
