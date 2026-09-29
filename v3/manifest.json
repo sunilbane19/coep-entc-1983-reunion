@@ -1,0 +1,19 @@
+{
+  "id": "/v3/",
+  "name": "COEP ENTC 1983 Reunion",
+  "short_name": "COEP 1983",
+  "description": "Private COEP ENTC 1983 Class Reunion directory",
+  "start_url": "/v3/#home",
+  "scope": "/v3/",
+  "display": "standalone",
+  "background_color": "#fbf5e9",
+  "theme_color": "#c98616",
+  "icons": [
+    {
+      "src": "/v3/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
