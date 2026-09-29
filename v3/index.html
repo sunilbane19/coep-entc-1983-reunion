@@ -331,6 +331,22 @@ async function start(){
   // the initial auth-state callback, which can race with getSession() and leave
   // the page stuck on a blank shell after a magic-link redirect.
   try{
+    // Complete either Supabase callback form before reading the session.
+    // Some email links return a PKCE \`code\` or an OTP \`token_hash\` in the
+    // query string rather than access/refresh tokens in the URL hash.
+    const qp=new URLSearchParams(window.location.search);
+    const code=qp.get('code');
+    const tokenHash=qp.get('token_hash');
+    const type=qp.get('type');
+    if(code){
+      const r=await sb.auth.exchangeCodeForSession(code);
+      if(r.error)throw r.error;
+      history.replaceState(null,"",window.location.pathname);
+    }else if(tokenHash&&type){
+      const r=await sb.auth.verifyOtp({token_hash:tokenHash,type:type});
+      if(r.error)throw r.error;
+      history.replaceState(null,"",window.location.pathname);
+    }
     const s=await sb.auth.getSession();
     if(s.error)throw s.error;
     user=s.data.session?.user||null;
